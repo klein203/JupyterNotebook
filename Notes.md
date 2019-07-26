@@ -16,3 +16,18 @@
 ## Setup in Conda Environment
 - `conda install -c conda-forge graphviz`
 - `conda install -c conda-forge python-graphviz`
+
+# Decision Tree Notes
+## Decision Tree Classifier
+- ID3: min(info_gain)
+- C4.5: min(info_gain_rate)
+- CART: min(gini)
+
+## Ensemble Classifier
+- Random Forest: bagging, majority of nDTs prediction, DT={ID3, C4.5, CART ...}
+- Extra Trees: bagging, majority of nDTs prediction, DT={random_feature}
+- AdaBoost: boosting, 
+- XgBoost
+
+## Decision Tree Regression
+- Decision Tree Regressor: min(sigma(R_l) + sigm(R_r))
