@@ -1,0 +1,13 @@
+# Scikit-learn Cookbook
+- Chapter 1: High-Performance Machine Learning – NumPy
+- Chapter 2: Pre-Model Workflow and Pre-Processing
+- Chapter 3: Dimensionality Reduction
+- Chapter 4: Linear Models with scikit-learn
+- Chapter 5: Linear Models – Logistic Regression
+- Chapter 6: Building Models with Distance Metrics
+- Chapter 7: Cross-Validation and Post-Model Workflow
+- Chapter 8: Support Vector Machines
+- Chapter 9: Tree Algorithms and Ensembles
+- Chapter 10: Text and Multiclass Classification with scikit-learn
+- Chapter 11: Neural Networks
+- Chapter 12: Create a Simple Estimator
