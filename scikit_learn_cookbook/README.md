@@ -64,9 +64,61 @@
 - Putting it all together – UCI breast cancer dataset
 
 # Chapter 6: Building Models with Distance Metrics
+- Using k-means to cluster data
+- Optimizing the number of centroids
+- Assessing cluster correctness
+- Using MiniBatch k-means to handle more data
+- Quantizing an image with k-means clustering
+- Finding the closest objects in the feature space
+- Probabilistic clustering with Gaussian Mixture Models
+- Using k-means for outlier detection
+- Using KNN for regression
+
 # Chapter 7: Cross-Validation and Post-Model Workflow
+- Selecting a model with cross-validation
+- K-fold cross-validation
+- Balanced cross-validation
+- Cross-validation with ShuffleSplit
+- Time series cross-validation
+- Grid search with scikit-learn
+- Randomized search with scikit-learn
+- Classification metrics
+- Regression metrics
+- Clustering metrics
+- Using dummy estimators to compare results
+- Feature selection
+- Feature selection on L1 norms
+- Persisting models with joblib or pickle
+
 # Chapter 8: Support Vector Machines
+- Classifying data with a linear SVM
+- Optimizing an SVM
+- Multiclass classification with SVM
+- Support vector regression
+
 # Chapter 9: Tree Algorithms and Ensembles
+- Doing basic classifications with decision trees
+- Visualizing a decision tree with pydot
+- Tuning a decision tree
+- Using decision trees for regression
+- Reducing overfitting with cross-validation
+- Implementing random forest regression
+- Bagging regression with nearest neighbor
+- Tuning gradient boosting trees
+- Tuning an AdaBoost regressor
+- Writing a stacking aggregator with scikit-learn
+
 # Chapter 10: Text and Multiclass Classification with scikit-learn
+- Using LDA for classification
+- Working with QDA – a nonlinear LDA
+- Using SGD for classification
+- Classifying documents with Naive Bayes
+- Label propagation with semi-supervised learning
+
 # Chapter 11: Neural Networks
+- Perceptron classifier
+- Neural network – multilayer perceptron
+- Stacking with a neural network
+
 # Chapter 12: Create a Simple Estimator
+- Creating a simple estimator
