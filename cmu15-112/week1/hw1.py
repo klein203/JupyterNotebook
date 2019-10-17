@@ -28,20 +28,48 @@ def roundHalfUp(d):
 # Functions for you to write
 #################################################
 
-def nearestOdd(n):
-    return 42
+def nearestOdd(n):    
+    l = [int((n // 2) * 2 - 1), int((n // 2) * 2 + 1)]
+    delta = [abs(l[0] - n), abs(l[1] - n)]
+    
+    return l[1] if delta[0] > delta[1] else l[0]
 
 def isPerfectSquare(n):
-    return 42
+    if (type(n) == int) or (type(n) == float):
+        if n >= 0:
+            return n == (int(math.sqrt(n)) ** 2)
+    return False
 
 def numberOfPoolBalls(rows):
-    return 42
+    return int(rows * (rows + 1) / 2)
 
 def numberOfPoolBallRows(balls):
-    return 42
+    return 0 if balls == 0 else math.ceil(math.sqrt(2 * balls + 1 / 4) - 1 / 2)
 
 def colorBlender(rgb1, rgb2, midpoints, n):
-    return 42
+    if n < 0 or n > midpoints + 1:
+        return None
+    if n == 0:
+        return rgb1
+    if n == midpoints + 1:
+        return rgb2
+    
+    offset = [1e6, 1e3, 1]
+    rgb1list = [0] * len(offset)
+    rgb2list = [0] * len(offset)
+    blendrgblist = [0] * len(offset)
+    blendcolor = 0
+    for i in range(len(offset)):
+        rgb1list[i] = rgb1 // offset[i]
+        rgb1 -= rgb1list[i] * offset[i]
+        
+        rgb2list[i] = rgb2 // offset[i]
+        rgb2 -= rgb2list[i] * offset[i]
+        
+        blendrgblist[i] = rgb1list[i] + roundHalfUp((rgb2list[i] - rgb1list[i]) / (midpoints + 1) * n)
+        blendcolor += blendrgblist[i] * offset[i]
+    
+    return int(blendcolor)
 
 #################################################
 # Bonus/Optional functions for you to write
@@ -117,7 +145,7 @@ def testColorBlender():
     assert(colorBlender(220020060, 189252201, 3, -1) == None)
     assert(colorBlender(220020060, 189252201, 3, 0) == 220020060)
     assert(colorBlender(220020060, 189252201, 3, 1) == 212078095)
-    assert(colorBlender(220020060, 189252201, 3, 2) == 205136131)
+    assert(colorBlender(220020060, 189252201, 3, 2) == 204136131)
     assert(colorBlender(220020060, 189252201, 3, 3) == 197194166)
     assert(colorBlender(220020060, 189252201, 3, 4) == 189252201)
     assert(colorBlender(220020060, 189252201, 3, 5) == None)

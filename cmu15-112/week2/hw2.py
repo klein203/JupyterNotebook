@@ -31,9 +31,55 @@ def roundHalfUp(d):
 #################################################
 
 def integral(f, a, b, N):
-    return 42        
+    delta = (b - a) / N
+    sum = 0
+    for i in range(N):
+        x_i = a + delta * i
+        x_i_plus_1 = a + delta * (i + 1)
+        sum += (f(x_i) + f(x_i_plus_1)) / 2 * delta
+    return sum
 
 def nthSmithNumber(n):
+    def isPrime(n):
+        if n < 2:
+            return False
+        if n == 2:
+            return True
+        if n % 2 == 0:
+            return False
+        maxFactor = round(n ** 0.5)
+        for factor in range(3, maxFactor + 1, 2):
+            if n % factor == 0:
+                return False
+        return True
+    
+    def nPrime(n):
+        factors = []
+        for i in range(n + 1):
+            if isPrime(i):
+                factors.append(i)
+        return factors
+        
+    def isSmithNumber(n):
+        if isPrime(n):
+            return False
+        
+        factors = nPrime(n)
+    
+    
+        while True:
+            maxFactor = round(number ** 0.5)
+            
+            if number % 2 == 0:
+                factors.append(2)
+                number /= 2
+            else:
+                for i in range(3, maxFactor + 1, 2):
+                    if isPrime(i):
+                        if number % i == 0:
+                            factors.append(i)
+                            number /= i
+        
     return 42        
 
 def drawPattern1(points, canvas, width, height):
