@@ -55,47 +55,228 @@ def nthSmithNumber(n):
     
     def nPrime(n):
         factors = []
-        for i in range(n + 1):
+        for i in range(2, n + 1):
             if isPrime(i):
                 factors.append(i)
         return factors
-        
+    
     def isSmithNumber(n):
-        if isPrime(n):
+        # calculate all factors less than n + 1
+        factors = nPrime(n)
+        
+        # n should not be factor itself
+        if len(factors) == 0 or n in factors:
             return False
         
-        factors = nPrime(n)
-    
-    
-        while True:
-            maxFactor = round(number ** 0.5)
-            
-            if number % 2 == 0:
-                factors.append(2)
-                number /= 2
-            else:
-                for i in range(3, maxFactor + 1, 2):
-                    if isPrime(i):
-                        if number % i == 0:
-                            factors.append(i)
-                            number /= i
+        # calculate all digits of n
+        nNum = 0
+        for c in str(n):
+            nNum += int(c)
         
-    return 42        
+        magicNums = []
+        while True:
+            if n in factors:
+                magicNums.append(int(n))
+                break
+            else:
+                for f in factors:
+                    if n % f == 0:
+                        magicNums.append(f)
+                        n /= f
+                        break
+        
+        # calculate all digits of magic numbers
+        magicNum = 0
+        for m in magicNums:
+            for c in str(m):
+                magicNum += int(c)
+    
+        return magicNum == nNum
+    
+    found = 0
+    guess = -1
+    while (found <= n):
+        guess += 1
+        if (isSmithNumber(guess)):
+            found += 1
+    return guess
 
 def drawPattern1(points, canvas, width, height):
-    pass
+    def drawSinglePattern(canvas, x, y, width, height):
+        # create_line(x1, y1, x2, y2) draws a line from (x1, y1) to (x2, y2)
+        canvas.create_line(x, y, x + width, y + height)
+        canvas.create_line(x + width, y, x, y + height)
+    
+    def drawPattern(points, canvas, width, height):
+        if points < 2:
+            return
+
+        nWidth = width / (points - 1)
+        nHeight = height / (points - 1)
+
+        for row in range(points):
+            for col in range(points):
+                x = col * nWidth
+                y = row * nHeight
+                drawSinglePattern(canvas, x, y, nWidth, nHeight)
+    
+    drawPattern(points, canvas, width, height)
 
 def drawPattern2(points, canvas, width, height):
-    pass
+    def drawAxis(canvas, width, height):
+        canvas.create_line(width / 2, 0, width / 2, height)
+        canvas.create_line(0, height / 2, width, height / 2)
+    
+    def drawSinglePattern(canvas, xAxis, yAxis, width, height):
+        canvas.create_line(xAxis, height / 2, width / 2, yAxis)
+        canvas.create_line(xAxis, height / 2, width / 2, height - yAxis)
+        canvas.create_line(width - xAxis, height / 2, width / 2, yAxis)
+        canvas.create_line(width - xAxis, height / 2, width / 2, height - yAxis)
+
+    def drawPattern(points, canvas, width, height):
+        if points < 2:
+            return
+
+        nWidth = width / (points - 1) / 2
+        nHeight = height / (points - 1) / 2
+
+        for i in range(1, points):
+            xAxis = i * nWidth
+            yAxis = height / 2 - i * nHeight
+            drawSinglePattern(canvas, xAxis, yAxis, width, height)
+
+    drawAxis(canvas, width, height)
+    drawPattern(points, canvas, width, height)
 
 def drawPattern3(points, canvas, width, height):
-    pass
+    def drawSingleSquarePattern(canvas, x, y, width, height):
+        canvas.create_line(x, y, x + width, y)
+        canvas.create_line(x + width, y, x + width, y + height)
+        canvas.create_line(x + width, y + height, x, y + height)
+        canvas.create_line(x, y + height, x, y)
+
+    def drawSingleTrianglePattern(canvas, x, y, width, height):
+        canvas.create_line(x, y, x + width, y)
+        canvas.create_line(x + width, y, x + width / 2, y + height)
+        canvas.create_line(x + width / 2, y + height, x, y)
+
+    def drawPattern(points, canvas, width, height):
+        if points < 2:
+            return
+
+        nWidth = width / (points - 1)
+        nHeight = height / (points - 1)
+
+        for row in range(points):
+            for col in range(points):
+                x = col * nWidth
+                y = row * nHeight
+                if row % 2 == 0:
+                    drawSingleSquarePattern(canvas, x, y, nWidth, nHeight)
+                else:
+                    drawSingleTrianglePattern(canvas, x, y, nWidth, nHeight)
+
+    drawPattern(points, canvas, width, height)
 
 def drawPattern4(canvas, width, height):
     pass
 
 def playPig():
-    print('Not yet implemented!')
+    import random
+    
+    class Player(object):
+        def __init__(self, name):
+            self.name = name
+            self.score = 0
+        
+        def hold(self, s):
+            self.score += s
+        
+        def dice(self, minDice=1, maxDice=6):
+            return random.randint(minDice, maxDice)
+    
+    class PigGame(object):
+        def __init__(self, name):
+            self.BLOCK_DICE = 1
+            self.WINNING_SCORE = 20
+            
+            self.name = name
+            self.players = []
+            self.curPlayerIdx = 0
+        
+        def addPlayer(self, player):
+            self.players.append(player)
+        
+        def nextPlayer(self):
+            self.curPlayerIdx = (self.curPlayerIdx + 1) % len(self.players)
+            return self.curPlayer
+        
+        @property
+        def curPlayer(self):
+            return self.players[self.curPlayerIdx]
+        
+        def winGame(self):
+            return self.curPlayer.score >= self.WINNING_SCORE
+        
+        def play(self):
+            nPlayers = int(input("Enter number of players:"))
+            for i in range(1, nPlayers + 1):
+                name = input("Enter name of player #%d:" % i)
+                player = Player(name)
+                self.addPlayer(player)
+
+            print("Game start!")
+            while True:
+                print("Player %s\'s turn:" % (self.curPlayer.name))
+                
+                turnScore = 0
+                while True:
+                    dice = self.curPlayer.dice()
+                    print("Dice! %d" % dice)
+                    if dice == self.BLOCK_DICE:
+                        print("Ooooops..., you hit the block dice and lose all your scores this turn :(")
+                        break
+                        
+                    turnScore += dice
+                    print("Total score: %d, This turn: %d, last dice: %d" % (self.curPlayer.score, turnScore, dice))
+                    
+                    cmd = input("press <enter> to go on, press <\'hold\'> to hold this turn")
+                    if cmd == 'hold':
+                        self.curPlayer.hold(turnScore)
+                        print("You hold the turn, save all scores this turn, total score: %d" % (self.curPlayer.score))
+                        break
+                    elif cmd == '':
+                        continue
+                    else:
+                        print("Something wrong here~")
+                        continue
+
+                if self.winGame():
+                    print("Congratulations! Player [%s] wins the game!" % (self.curPlayer.name))
+                    break
+                else:
+                    self.nextPlayer()
+
+            print("Game end!")
+            
+            
+    game = PigGame('Pig Game')
+    game.play()
+        
+        
+#     linesEntered = 0
+#     while (True):
+#         response = input("Enter a string (or 'done' to quit): ")
+#         if (response == "done"):
+#             break
+#         print("  You entered: ", response)
+#         linesEntered += 1
+#     print("Bye!")
+#     return linesEntered
+
+# linesEntered = readUntilDone()
+# print("You entered", linesEntered, "lines (not counting 'done').")
+#     print('Not yet implemented!')
 
 #################################################
 # Bonus/Optional functions for you to write
