@@ -198,7 +198,7 @@ def playPig():
     class PigGame(object):
         def __init__(self, name):
             self.BLOCK_DICE = 1
-            self.WINNING_SCORE = 20
+            self.WINNING_SCORE = 50
             
             self.name = name
             self.players = []
@@ -226,6 +226,8 @@ def playPig():
                 self.addPlayer(player)
 
             print("Game start!")
+            print("Block dice: %d, winning score: %d" % (self.BLOCK_DICE, self.WINNING_SCORE))
+            
             while True:
                 print("Player %s\'s turn:" % (self.curPlayer.name))
                 
@@ -234,25 +236,30 @@ def playPig():
                     dice = self.curPlayer.dice()
                     print("Dice! %d" % dice)
                     if dice == self.BLOCK_DICE:
-                        print("Ooooops..., you hit the block dice and lose all your scores this turn :(")
+                        print(":( Ooooops..., you lose all your scores this turn")
                         break
-                        
-                    turnScore += dice
-                    print("Total score: %d, This turn: %d, last dice: %d" % (self.curPlayer.score, turnScore, dice))
                     
-                    cmd = input("press <enter> to go on, press <\'hold\'> to hold this turn")
-                    if cmd == 'hold':
+                    turnScore += dice
+                    print(":) Saved: %d, This turn: %d" % (self.curPlayer.score, turnScore))
+                    
+                    if self.curPlayer.score + turnScore >= self.WINNING_SCORE:
                         self.curPlayer.hold(turnScore)
-                        print("You hold the turn, save all scores this turn, total score: %d" % (self.curPlayer.score))
+                        print(":) Autosave all scores. Saved: %d" % (self.curPlayer.score))
+                        break
+                    
+                    cmd = input("> press <enter> to continue, <h> to hold")
+                    if cmd == 'h':
+                        self.curPlayer.hold(turnScore)
+                        print(":) Save all scores. Saved: %d" % (self.curPlayer.score))
                         break
                     elif cmd == '':
                         continue
                     else:
-                        print("Something wrong here~")
+                        print(":( Something wrong here, but continue ...")
                         continue
 
                 if self.winGame():
-                    print("Congratulations! Player [%s] wins the game!" % (self.curPlayer.name))
+                    print("Congratulations! Player %s wins the game!" % (self.curPlayer.name))
                     break
                 else:
                     self.nextPlayer()
@@ -264,20 +271,6 @@ def playPig():
     game.play()
         
         
-#     linesEntered = 0
-#     while (True):
-#         response = input("Enter a string (or 'done' to quit): ")
-#         if (response == "done"):
-#             break
-#         print("  You entered: ", response)
-#         linesEntered += 1
-#     print("Bye!")
-#     return linesEntered
-
-# linesEntered = readUntilDone()
-# print("You entered", linesEntered, "lines (not counting 'done').")
-#     print('Not yet implemented!')
-
 #################################################
 # Bonus/Optional functions for you to write
 #################################################

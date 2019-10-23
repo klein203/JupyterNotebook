@@ -34,7 +34,66 @@ def roundHalfUp(d):
 #################################################
 
 def bestScrabbleScore(dictionary, letterScores, hand):
-    return 42
+    import copy
+    # transform lowercase character to dimension of index
+    def idx(ch):
+        return ord(ch) - ord('a')
+    
+    # return a length of 26 list which stores the count number of lowercase character
+    def letterDist(hand):
+        dist = [0] * 26
+        for ch in hand:
+            dist[idx(ch)] += 1
+        return dist
+    
+    # test if target word can be spelled by characters in hand
+    def isAvailable(word, hand):
+        hDist = letterDist(hand)
+        for ch in word:
+            if hDist[idx(ch)] == 0:
+                return False
+            else:
+                hDist[idx(ch)] -= 1
+        return True
+    
+    # return all available words which can be spelled by characters in hand
+    def availableWords(dictionary, hand):
+        availableWords = []
+        for word in dictionary:
+            if isAvailable(word, hand):
+                availableWords.append(word)
+        return availableWords
+    
+    # scoring all words with given letter-score setting 
+    def scoreWords(words, letterScores):
+        if len(words) == 0:
+            return []
+        scores = [0] * len(words)
+        for i in range(len(words)):
+            scores[i] = 0
+            for ch in list(words[i]):
+                scores[i] += letterScores[idx(ch)]
+        return scores
+    
+    def best(words, scores):
+        if len(words) == 0 or len(scores) == 0:
+            return None
+        c = copy.deepcopy(scores)
+        c.sort(reverse=True)
+        idxs = [i for i, w in enumerate(scores) if w == c[0]]
+        bestWords = [words[i] for i in idxs]
+        bestScores = [scores[i] for i in idxs]
+        
+        if len(bestWords) == 1:
+            return (bestWords[0], bestScores[0])
+        else:
+            return (bestWords, bestScores[0])
+                
+    
+    availableWords = availableWords(dictionary, hand)
+    availableScores = scoreWords(availableWords, letterScores)
+    
+    return best(availableWords, availableScores)
 
 #################################################
 # Person class

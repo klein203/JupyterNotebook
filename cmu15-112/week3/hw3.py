@@ -34,25 +34,176 @@ def roundHalfUp(d):
 #################################################
 
 def patternedMessage(msg, pattern):
-    return 42
+    import string
+    
+    def nextChar(msg):
+        idx = 0
+        l = len(msg)
+        while True:
+            yield msg[idx]
+            idx = (idx + 1) % l
+    
+    ret = ''
+    g = nextChar(msg.replace(' ', ''))
+    omits = ['\n', '\r', ' ']
+    p = pattern.strip()
+    for i in range(len(p)):
+        if p[i] in omits:
+            ret += p[i]
+        else:
+            ret += next(g)
+    
+    return ret
 
 #################################################
 # encodeRightLeftRouteCipher + decodeRightLeftRouteCipher
 #################################################
 
 def encodeRightLeftRouteCipher(text, rows):
-    return 42
+    import string
+    import math
+    
+    def f(row, col, rows, cols):
+        return col * rows + row
+    
+    cols = math.ceil(len(text) / rows)
+    l = rows * cols
+    
+    # complete text
+    text += string.ascii_lowercase[::-1][0:l - len(text)]
+    text1d = [ch for ch in text]
+    
+    encode2d = [[''] * cols for i in range(rows)]
+    for j in range(cols):
+        for i in range(rows):
+            if i % 2 == 0:
+                encode2d[i][j] = text1d[f(i, j, rows, cols)]
+            else:
+                encode2d[i][cols - 1 - j] = text1d[f(i, j, rows, cols)]
+
+    # start from row
+    ret = str(rows)
+    for row in encode2d:
+        ret += ''.join(row)
+
+    return ret
 
 def decodeRightLeftRouteCipher(cipher):
-    return 42
+    import re
+    
+    def f(l, rows, cols):
+        return (l // cols, l % cols)
+
+    r = re.compile("^[0-9]+")
+
+    pos = None
+    if r.search(cipher) is not None:
+        pos = r.search(cipher).span()
+    else:
+        return None
+    
+    rows = int(cipher[pos[0]:pos[1]])
+    
+    text = cipher[pos[1]:]
+    text1d = [ch for ch in text]
+    
+    l = len(text)
+    cols = l // rows
+    
+    decode2d = [[''] * cols for i in range(rows)]
+    for i in range(rows * cols):
+        (row, col) = f(i, rows, cols)
+        if row % 2 == 0:
+            decode2d[row][col] = text1d[i]
+        else:
+            decode2d[row][cols - 1 - col] = text1d[i]
+    
+    ret = ''
+    for j in range(cols):
+        ret += ''.join([row[j] for row in decode2d])
+    
+    if ret.find('z') != -1:
+        idx = ret.index('z')
+        ret = ret[0:idx]
+    
+    return ret
 
 #################################################
 # drawSimpleTortoiseProgram
 #################################################
 
 def drawSimpleTortoiseProgram(program, canvas, width, height):
-    return 42
+    import math
+    
+    glb = {
+        'x': width // 2,
+        'y': height // 2,
+        'degree': 0, # to the east
+        'color': 'none'
+    }
 
+    def changeColor(canvas, glb, color):
+        if color in ['none', 'blue', 'red', 'green', 'orange', 'purple']:
+            glb['color'] = color
+    
+    def changeDirection(canvas, glb, delta):
+        glb['degree'] = (glb['degree'] + delta) % 360
+    
+    def move(canvas, glb, length):
+        x = float(glb['x'])
+        y = float(glb['y'])
+        degree = float(glb['degree'])
+        fill = glb['color']
+        
+        x1 = x + math.cos(math.radians(degree)) * length
+        y1 = y + math.sin(math.radians(degree)) * length
+        if fill != 'none':
+            canvas.create_line(x, y, x1, y1, fill=fill)
+        glb['x'] = x1
+        glb['y'] = y1
+    
+    def callFunc(f, canvas, glb, *args):
+        f(canvas, glb, *args)
+    
+    def parseCommand(s, canvas, glb):
+        commands = ['color', 'move', 'left', 'right']
+        args = s.split(" ")
+        if args[0] in commands:
+            if args[0] == commands[0]:
+                callFunc(changeColor, canvas, glb, args[1])
+            elif args[0] == commands[1]:
+                callFunc(move, canvas, glb, float(args[1]))
+            elif args[0] == commands[2]:
+                callFunc(changeDirection, canvas, glb, -float(args[1]))
+            elif args[0] == commands[3]:
+                callFunc(changeDirection, canvas, glb, float(args[1]))
+            else:
+                pass
+        else:
+            return "error"
+        
+    def parseCommands(program, canvas, glb):
+        import io
+        
+        buf = io.StringIO(program)
+        while True:
+            if buf.tell() == len(program):
+                break
+            
+            s = buf.readline()
+            
+            s = s.strip()
+            if s.find('#') != -1:
+                s = s[0:s.index('#')]
+            if s == '':
+                continue
+            
+            parseCommand(s, canvas, glb)
+        
+        buf.close()
+
+    parseCommands(program, canvas, glb)
+    
 #################################################
 # drawNiceRobot
 #################################################
