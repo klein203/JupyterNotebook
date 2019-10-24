@@ -75,32 +75,50 @@ def bestScrabbleScore(dictionary, letterScores, hand):
                 scores[i] += letterScores[idx(ch)]
         return scores
     
-    def best(words, scores):
+    def bestWords(words, scores):
         if len(words) == 0 or len(scores) == 0:
             return None
         c = copy.deepcopy(scores)
         c.sort(reverse=True)
+        # get all indexes which value equals to maxium score
         idxs = [i for i, w in enumerate(scores) if w == c[0]]
         bestWords = [words[i] for i in idxs]
-        bestScores = [scores[i] for i in idxs]
         
         if len(bestWords) == 1:
-            return (bestWords[0], bestScores[0])
+            return (bestWords[0], c[0])
         else:
-            return (bestWords, bestScores[0])
+            return (bestWords, c[0])
                 
     
     availableWords = availableWords(dictionary, hand)
     availableScores = scoreWords(availableWords, letterScores)
     
-    return best(availableWords, availableScores)
+    return bestWords(availableWords, availableScores)
 
 #################################################
 # Person class
 #################################################
 
 class Person(object):
-    pass
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+        self.friends = None
+    
+    def getName(self):
+        return self.name
+    
+    def getAge(self):
+        return self.age
+    
+    def getFriends(self):
+        return self.friends
+    
+    def addFriend(self, person):
+        if self.friends == None:
+            self.friends = []
+        if person != self and person not in self.friends:
+            self.friends.append(person)
 
 #################################################
 # playMyTextAdventureGame
