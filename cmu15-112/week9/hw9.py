@@ -35,6 +35,8 @@ def roundHalfUp(d):
 #################################################
 
 class Bird(object):
+    isMigrating = False
+
     def __init__(self, name):
         self.name = name
         self.eggs = 0
@@ -59,6 +61,15 @@ class Bird(object):
 
     def layEgg(self):
         self.eggs += 1
+    
+    @staticmethod
+    def startMigrating():
+        Bird.isMigrating = True
+    
+    @staticmethod
+    def stopMigrating():
+        Bird.isMigrating = False
+
 
 class Penguin(Bird):
     def fly(self):
@@ -75,7 +86,9 @@ class MessengerBird(Bird):
     def deliverMessage(self):
         return self.message
     
-    
+
+def runCreativeSidescroller():
+    pass
 #################################################
 # testAll and main
 #################################################
