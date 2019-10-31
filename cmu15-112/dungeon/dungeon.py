@@ -16,10 +16,11 @@ class GameObject(object):
 
 class Scenario(GameObject):
     def __init__(self, name, row, col, **kwargs):
-        super().__init__(name)
+        super().__init__(name, **kwargs)
         self.row = row
         self.col = col
         self.board = [([0] * col) for i in range(row)]
+#         self.activated = False
         
     def getBorder(self):
         return self.row, self.col
@@ -29,12 +30,21 @@ class Scenario(GameObject):
             return False
         else:
             return True
+    
+#     def activate(self):
+#         self.activated = True
+        
+#     def deactivate(self):
+#         self.activated = False
+        
+#     def isActivated(self):
+#         return self.activated
+        
 
 class Map(Scenario):
     def __init__(self, name, row, col, **kwargs):
         super().__init__(name, row, col, **kwargs)
-        self.randomMap(p=0.98)
-#         self.testMap()
+        self.randomMap()
     
     def randomMap(self, p=0.999):
         for i in range(self.row):
@@ -42,24 +52,16 @@ class Map(Scenario):
                 if random.random() > p:
                     self.board[i][j] = 1
     
-    def testMap(self):
-        self.board[1][1] = 1
-        self.board[2][3] = 1
-        self.board[6][9] = 1
-        self.board[7][10] = 1
-        self.board[7][0] = 1
-        self.board[0][10] = 1
-
 
 class Item(GameObject):
-    def __init__(self, **kwargs):
-        super().__init__(name)
+    def __init__(self, name, **kwargs):
+        super().__init__(name, **kwargs)
         self.category = 0
 
 
 class Creature(GameObject):
     def __init__(self, name, **kwargs):
-        super().__init__(name)
+        super().__init__(name, **kwargs)
         
         self.type = 0
         
@@ -74,15 +76,17 @@ class Creature(GameObject):
 #         self.luk = 10
         
         self.hp = 0
-        self.sp = 0
+#         self.sp = 0
         self.attack = 0
         self.defense = 0
-        self.hit = 0
-        self.avoid = 0
+#         self.hit = 0
+#         self.avoid = 0
         
+        # position
         self.rowIdx = 0
         self.colIdx = 0
         
+        # dice
         self.maxDice = 20
     
     def dice(self):
@@ -92,9 +96,9 @@ class Creature(GameObject):
         self.rowIdx += drow
         self.colIdx += dcol
     
-    def moveToPos(self, rowIdx, colIdx):
-        self.rowIdx = rowIdx
-        self.colIdx = colIdx
+#     def moveToPos(self, rowIdx, colIdx):
+#         self.rowIdx = rowIdx
+#         self.colIdx = colIdx
     
     def getPos(self):
         return self.rowIdx, self.colIdx
@@ -110,7 +114,17 @@ class Monster(Creature):
         super().__init__(name, **kwargs)
 
 
-class Game(App):
+# class BattleMode(Mode):
+#     def __init__(self, name, player, monster, **kwargs):
+#         super().__init__(name, **kwargs)
+#         self.player = player
+#         self.monster = monster
+    
+#     def battle(self, attacker, defencer):
+#         pass
+        
+
+class MainMode(Mode):
     def __init__(self, name, width=420, height=420, x=0, y=0, **kwargs):
         super().__init__(width=width, height=height, x=x, y=y, **kwargs)
         # constant
@@ -147,6 +161,9 @@ class Game(App):
     def setActiveMap(self, name):
         if name in self.maps:
             self.map = self.maps[name]
+    
+    def getActiveMap(self):
+        return self.map
     
     def initMaps(self):
         self.appendMap(Map('map_default', 12, 16))
@@ -197,7 +214,7 @@ class Game(App):
                 self.scrollMap()
     
     def hasBlock(self, rowIdx, colIdx):
-        return self.map.hasBlock(rowIdx, colIdx)
+        return self.getActiveMap().hasBlock(rowIdx, colIdx)
     
     def scrollMap(self):
         curRowIdx, curColIdx = self.getPlayerPos()
@@ -378,18 +395,21 @@ class Game(App):
                            fill='black', 
                            font='Arial 8')
         
-     
-#     def drawMonsters(self, canvas):
-#         pass
-    
-        
+
+class GameModalApp(ModalApp):
+    def appStarted(self):
+        self.mainMode = MainMode()
+#         self.battleMode = BattleMode()
+        self.setActiveMode(app.mainMode)
+        self.timerDelay = 50
 
 class GameDelegator(object):
     def __init__(self, name, width=200, height=130, x=750, y=550, **kwargs):
-        self.game = Game(name, width, height, x, y, autorun=False, title='Demo')
+        self.game = GameModalApp(width=width, height=height, **kwargs)
     
     def getInstance(self):
         return self.game
     
     def run(self):
         self.getInstance().run()
+
