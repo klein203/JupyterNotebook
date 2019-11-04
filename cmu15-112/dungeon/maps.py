@@ -1,7 +1,8 @@
 import random
 import modal
+from modal import *
 
-class Map(GameObject):
+class DefaultMap(Map):
     def __init__(self, config):
         super().__init__(config)
         self.row = config.row

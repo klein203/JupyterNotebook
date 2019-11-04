@@ -1,18 +1,9 @@
-import pygame
 import modal
+import creatures
+from modal import *
+from creatures import *
 
-class Scenario(GameObject):
-    def __init__(self, config):
-        super().__init__(config)
-    
-    def on_event(self, event):
-        pass
-    
-    def on_action(self):
-        pass
-    
-    def on_rendor(self, view):
-        pass
+import pygame
 
 
 class DefaultScenario(Scenario):
@@ -24,10 +15,6 @@ class DefaultScenario(Scenario):
         self.MAP_PADDING_BLOCK = config.MAP_PADDING_BLOCK
         self.PADDING_PIXEL = config.PADDING_PIXEL
         
-        # maps
-        self.maps = dict()
-        self.map = None
-        
         # slide window frame setting
         self.slideWindowRow = config.slideWindowRow
         self.slideWindowCol = config.slideWindowCol
@@ -38,9 +25,13 @@ class DefaultScenario(Scenario):
         self.scrollRowIdx = 0
         self.scrollColIdx = 0
         
+        # maps
+        self.maps = dict()
+        self.map = None
+        
         # player
         self.player = None
-        self.initPlayer()
+#         self.initPlayer()
 
     def appendMap(self, m):
         if isinstance(m, Map):
@@ -53,8 +44,11 @@ class DefaultScenario(Scenario):
     def getActiveMap(self):
         return self.map
     
-    def initPlayer(self):
-        self.player = Player('Hero')
+#     def initPlayer(self):
+#         c = {
+#             'name': 'Hero'
+#         }
+#         self.player = Player(Config(**c))
 
     def getMapBorder(self):
         return self.map.getBorder()
@@ -71,6 +65,12 @@ class DefaultScenario(Scenario):
     def getSlideWindowBorder(self):
         return (self.slideWindowRow, self.slideWindowCol)
     
+    def setPlayer(self, p):
+        self.player = p
+        
+    def getPlayer(self):
+        return self.player
+
     def getPlayerPos(self):
         return self.player.getPos()
     
@@ -116,26 +116,29 @@ class DefaultScenario(Scenario):
             self.scrollColIdx = mapBorderCol - self.slideWindowCol
         
     def on_event(self, event):
-        if event.key == 'Down':
-            self.movePlayer(+1, 0)
-            self.scrollMap()
-        elif event.key == 'Left':
-            self.movePlayer(0, -1)
-            self.scrollMap()
-        elif event.key == 'Right':
-            self.movePlayer(0, +1)
-            self.scrollMap()
-        elif event.key == 'Up':
-            self.movePlayer(-1, 0)
-            self.scrollMap()
+        pass
+#         if event.key == pygame.K_DOWN:
+#             print('123123123123')
+#             self.movePlayer(+1, 0)
+#             self.scrollMap()
+#         elif event.key == pygame.K_LEFT:
+#             self.movePlayer(0, -1)
+#             self.scrollMap()
+#         elif event.key == pygame.K_RIGHT:
+#             self.movePlayer(0, +1)
+#             self.scrollMap()
+#         elif event.key == pygame.K_UP:
+#             self.movePlayer(-1, 0)
+#             self.scrollMap()
     
     def on_action(self):
         pass
     
     def on_rendor(self, view):
-        view.render(self)
+        if view != None:
+            view.render(self)
     
-    def redrawAll(self, view)
+    def redrawAll(self, view):
         dx = self.MAP_PADDING_BLOCK * self.PADDING_PIXEL
         dy = self.MAP_PADDING_BLOCK * self.PADDING_PIXEL
         self.drawSlideWindow(view, dx, dy)
@@ -243,6 +246,7 @@ class DefaultScenario(Scenario):
         self.drawDebugText(view, dx, dy)
     
     def drawDebugText(self, view, dx, dy):
+        pass
         # scroll window index
 #         view.create_text(dx + self.CELL_PIXEL // 2, 
 #                            self.PADDING_PIXEL // 2, 
