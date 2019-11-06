@@ -34,6 +34,7 @@ defaultMapConfig = {
     'name': 'default_map',
     'row': 15,
     'col': 20,
+    'randomMode': True,
     'p': 0.98
 }
 
@@ -125,14 +126,14 @@ class DefaultScenario(Scenario):
         self.PADDING_PIXEL = config.PADDING_PIXEL
         
         # slide window frame setting
-        self.slideWindowRow = config.slideWindowRow
         self.slideWindowCol = config.slideWindowCol
+        self.slideWindowRow = config.slideWindowRow
         
-        self.offsetRow = self.slideWindowRow // 2
         self.offsetCol = self.slideWindowCol // 2
+        self.offsetRow = self.slideWindowRow // 2
         
-        self.scrollRowIdx = 0
         self.scrollColIdx = 0
+        self.scrollRowIdx = 0
         
         # maps
         self.maps = dict()
@@ -142,8 +143,8 @@ class DefaultScenario(Scenario):
         self.player = None
 
     def reset(self):
-        self.scrollRowIdx = 0
         self.scrollColIdx = 0
+        self.scrollRowIdx = 0
         
         self.player.reset()
         
@@ -164,16 +165,16 @@ class DefaultScenario(Scenario):
         return self.map.getBorder()
     
     def getScrollIndex(self):
-        return (self.scrollRowIdx, self.scrollColIdx)
+        return (self.scrollColIdx, self.scrollRowIdx)
     
-    def setSlideWindowBorder(self, row, col):
-        self.slideWindowRow = row
+    def setSlideWindowBorder(self, col, row):
         self.slideWindowCol = col
-        self.offsetRow = self.slideWindowRow // 2
+        self.slideWindowRow = row
         self.offsetCol = self.slideWindowCol // 2
+        self.offsetRow = self.slideWindowRow // 2
 
     def getSlideWindowBorder(self):
-        return (self.slideWindowRow, self.slideWindowCol)
+        return (self.slideWindowCol, self.slideWindowRow)
     
     def setPlayer(self, p):
         self.player = p
@@ -184,39 +185,29 @@ class DefaultScenario(Scenario):
     def getPlayerPos(self):
         return self.player.getPos()
     
-#     def movePlayerToPos(self, row, col):
-#         self.player.moveToPos(row, col)
+#     def movePlayerToPos(self, col, row):
+#         self.player.moveToPos(col, row)
 #         self.updateScrollIndex()
     
-    def movePlayer(self, drow, dcol):
-        curRowIdx, curColIdx = self.getPlayerPos()
+    def movePlayer(self, dcol, drow):
+        curColIdx, curRowIdx = self.getPlayerPos()
         
-        tryRowIdx = curRowIdx + drow
         tryColIdx = curColIdx + dcol
+        tryRowIdx = curRowIdx + drow
         
-        mapBorderRow, mapBorderCol = self.getMapBorder()
+        mapBorderCol, mapBorderRow = self.getMapBorder()
         
-        if tryRowIdx >= 0 and tryRowIdx < mapBorderRow and tryColIdx >= 0 and tryColIdx < mapBorderCol:
-            if self.hasBlock(tryRowIdx, tryColIdx) == False:
-                self.player.move(drow, dcol)
+        if tryColIdx >= 0 and tryColIdx < mapBorderCol and tryRowIdx >= 0 and tryRowIdx < mapBorderRow:
+            if self.hasBlock(tryColIdx, tryRowIdx) == False:
+                self.player.move(dcol, drow)
                 self.updateScrollIndex()
     
-    def hasBlock(self, rowIdx, colIdx):
-        return self.getActiveMap().hasBlock(rowIdx, colIdx)
+    def hasBlock(self, colIdx, rowIdx):
+        return self.getActiveMap().hasBlock(colIdx, rowIdx)
     
     def updateScrollIndex(self):
-        curRowIdx, curColIdx = self.getPlayerPos()
-        mapBorderRow, mapBorderCol = self.getMapBorder()
-        
-        if curRowIdx < self.offsetRow:
-            self.scrollRowIdx = 0
-        elif curRowIdx < mapBorderRow - self.slideWindowRow + self.offsetRow:
-            self.scrollRowIdx = curRowIdx - self.offsetRow + 1
-        else:
-            self.scrollRowIdx = mapBorderRow - self.slideWindowRow
-        
-#         print('offsetCol', offsetCol, 'mapbordercol', mapBorderCol, ' - wincol', self.slideWindowCol)
-#         print('scroll', self.scrollColIdx, 'col', curCol, offsetCol, mapBorderCol - self.slideWindowCol)
+        curColIdx, curRowIdx = self.getPlayerPos()
+        mapBorderCol, mapBorderRow = self.getMapBorder()
 
         if curColIdx < self.offsetCol:
             self.scrollColIdx = 0
@@ -225,16 +216,23 @@ class DefaultScenario(Scenario):
         else:
             self.scrollColIdx = mapBorderCol - self.slideWindowCol
         
+        if curRowIdx < self.offsetRow:
+            self.scrollRowIdx = 0
+        elif curRowIdx < mapBorderRow - self.slideWindowRow + self.offsetRow:
+            self.scrollRowIdx = curRowIdx - self.offsetRow + 1
+        else:
+            self.scrollRowIdx = mapBorderRow - self.slideWindowRow
+        
     def on_event(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_DOWN:
-                self.movePlayer(+1, 0)
-            elif event.key == pygame.K_LEFT:
-                self.movePlayer(0, -1)
-            elif event.key == pygame.K_RIGHT:
                 self.movePlayer(0, +1)
-            elif event.key == pygame.K_UP:
+            elif event.key == pygame.K_LEFT:
                 self.movePlayer(-1, 0)
+            elif event.key == pygame.K_RIGHT:
+                self.movePlayer(+1, 0)
+            elif event.key == pygame.K_UP:
+                self.movePlayer(0, -1)
     
     def on_action(self):
         # dummy action
@@ -259,13 +257,6 @@ class DefaultScenario(Scenario):
         view.rectangle(((x, y), (w, h)), color=View.COLOR_BLACK, border=1)
         
         # grid
-        for i in range(1, self.slideWindowRow):
-            start_x = dx
-            start_y = dy + i * self.CELL_PIXEL
-            end_x = start_x + self.slideWindowCol * self.CELL_PIXEL
-            end_y = start_y
-            view.line((start_x, start_y), (end_x, end_y), color=View.COLOR_LIGHT_GREY, border=1)
-            
         for j in range(1, self.slideWindowCol):
             start_x = dx + j * self.CELL_PIXEL
             start_y = dy
@@ -273,12 +264,20 @@ class DefaultScenario(Scenario):
             end_y = start_y + self.slideWindowRow * self.CELL_PIXEL
             view.line((start_x, start_y), (end_x, end_y), color=View.COLOR_LIGHT_GREY, border=1)
         
+        for i in range(1, self.slideWindowRow):
+            start_x = dx
+            start_y = dy + i * self.CELL_PIXEL
+            end_x = start_x + self.slideWindowCol * self.CELL_PIXEL
+            end_y = start_y
+            view.line((start_x, start_y), (end_x, end_y), color=View.COLOR_LIGHT_GREY, border=1)
+            
+        
         # block cells
         for i in range(self.slideWindowRow):
             for j in range(self.slideWindowCol):
-                sRowIdx = i + self.scrollRowIdx
                 sColIdx = j + self.scrollColIdx
-                if self.hasBlock(sRowIdx, sColIdx):
+                sRowIdx = i + self.scrollRowIdx
+                if self.hasBlock(sColIdx, sRowIdx):
                     pad = 2
                     x = dx + j * self.CELL_PIXEL + pad
                     y = dy + i * self.CELL_PIXEL + pad
@@ -289,27 +288,27 @@ class DefaultScenario(Scenario):
                               text='(%d, %d)' % (sRowIdx, sColIdx), 
                               color=View.COLOR_BLACK)
 
-    def convertToSlideWindowPos(self, rowIdx, colIdx):
-        sRowIdx = self.offsetRow - 1
+    def convertToSlideWindowPos(self, colIdx, rowIdx):
         sColIdx = self.offsetCol - 1
+        sRowIdx = self.offsetRow - 1
 
-        mapBorderRow, mapBorderCol = self.getMapBorder()
-                
-        if rowIdx < self.offsetRow:
-            sRowIdx = rowIdx
-        elif rowIdx > mapBorderRow - (self.slideWindowRow - self.offsetRow) - 1:
-            sRowIdx = rowIdx - (mapBorderRow - self.slideWindowRow)
+        mapBorderCol, mapBorderRow = self.getMapBorder()
         
         if colIdx < self.offsetCol:
             sColIdx = colIdx
         elif colIdx > mapBorderCol - (self.slideWindowCol - self.offsetCol) - 1:
             sColIdx = colIdx - (mapBorderCol - self.slideWindowCol)
-
-        return (sRowIdx, sColIdx)
+        
+        if rowIdx < self.offsetRow:
+            sRowIdx = rowIdx
+        elif rowIdx > mapBorderRow - (self.slideWindowRow - self.offsetRow) - 1:
+            sRowIdx = rowIdx - (mapBorderRow - self.slideWindowRow)
+        
+        return (sColIdx, sRowIdx)
         
     def drawPlayer(self, view, dx, dy):
-        (curRowIdx, curColIdx) = self.getPlayerPos()
-        (slideRowIdx, slideColIdx) = self.convertToSlideWindowPos(curRowIdx, curColIdx)
+        (curColIdx, curRowIdx) = self.getPlayerPos()
+        (slideColIdx, slideRowIdx) = self.convertToSlideWindowPos(curColIdx, curRowIdx)
         
         pad = 3
         x = dx + slideColIdx * self.CELL_PIXEL + pad
@@ -367,12 +366,12 @@ class DefaultScenario(Scenario):
         # player position index
 #         view.create_text(dx + self.CELL_PIXEL // 2, 
 #                            self.PADDING_PIXEL + self.PADDING_PIXEL // 2, 
-#                            text='%d' % self.getPlayerPos()[1], 
+#                            text='%d' % self.getPlayerPos()[0], 
 #                            fill='black', 
 #                            font='Arial 8')
 #         view.create_text(self.PADDING_PIXEL + self.PADDING_PIXEL // 2, 
 #                            dy + self.CELL_PIXEL // 2, 
-#                            text='%d' % self.getPlayerPos()[0], 
+#                            text='%d' % self.getPlayerPos()[1], 
 #                            fill='black', 
 #                            font='Arial 8')
 
@@ -392,16 +391,17 @@ class Map(GameObject):
 class DefaultMap(Map):
     def __init__(self, config):
         super().__init__(config)
-        self.row = config.row
         self.col = config.col
+        self.row = config.row
         self.board = [([0] * self.col) for i in range(self.row)]
 
-        self.randomMap(config.p)
+        if config.randomMode:
+            self.randomMap(config.p)
         
     def getBorder(self):
-        return self.row, self.col
+        return self.col, self.row
     
-    def hasBlock(self, rowIdx, colIdx):
+    def hasBlock(self, colIdx, rowIdx):
         if self.board[rowIdx][colIdx] == 0:
             return False
         else:
@@ -438,8 +438,8 @@ class Creature(GameObject):
 #         self.avoid = 0
         
         # position
-        self.rowIdx = 0
         self.colIdx = 0
+        self.rowIdx = 0
         
         # dice
         self.maxDice = 20
@@ -447,20 +447,20 @@ class Creature(GameObject):
     def dice(self):
         return random.randint(1, self.maxDice)
     
-    def move(self, drow, dcol):
-        self.rowIdx += drow
+    def move(self, dcol, drow):
         self.colIdx += dcol
+        self.rowIdx += drow
     
 #     def moveToPos(self, rowIdx, colIdx):
 #         self.rowIdx = rowIdx
 #         self.colIdx = colIdx
     
     def getPos(self):
-        return self.rowIdx, self.colIdx
+        return self.colIdx, self.rowIdx
     
     def reset(self):
-        self.rowIdx = 0
         self.colIdx = 0
+        self.rowIdx = 0
 
 
 class Player(Creature):

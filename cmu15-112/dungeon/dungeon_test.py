@@ -116,10 +116,10 @@ def testConvertToSlideWindowPos():
     
     print("Pass!")
 
-
 def testAll():
     testConvertToSlideWindowPos()
     testMovePlayer()
+
 
 if __name__ == '__main__':
     testAll()
