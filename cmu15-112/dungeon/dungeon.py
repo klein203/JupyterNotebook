@@ -10,7 +10,11 @@ defaultViewConfig = {
     'name': '400x300',
     'width': 400,
     'height': 300,
-    'fps': 50
+    'fps': 50,
+    
+#     'fontname': 'arial',
+    'fontname': 'calibri',
+    'fontsize': 10
 }
 
 defaultScenarioConfig = {
@@ -18,18 +22,18 @@ defaultScenarioConfig = {
     'width': 400,
     'height': 300,
     
-    'CELL_PIXEL': 10,
+    'CELL_PIXEL': 20,
     'MAP_PADDING_BLOCK': 2,
-    'PADDING_PIXEL': 15,
+    'PADDING_PIXEL': 30,
     
-    'slideWindowRow': 7,
-    'slideWindowCol': 11
+    'slideWindowRow': 10,
+    'slideWindowCol': 15
 }
 
 defaultMapConfig = {
     'name': 'default_map',
-    'row': 11,
-    'col': 16,
+    'row': 15,
+    'col': 20,
     'p': 0.98
 }
 
@@ -60,19 +64,19 @@ class Logger(object):
         if level >= self.level:
             print('[%s] %s' % (LEVEL_MSG[level], message))
         
-    def logDebug(self, message):
+    def debug(self, message):
         self.log(message, level=Logger.DEBUG)
         
-    def logInfo(self, message):
+    def info(self, message):
         self.log(message, level=Logger.INFO)
         
-    def logWarning(self, message):
+    def warning(self, message):
         self.log(message, level=Logger.WARNING)
     
-    def logError(self, message):
+    def error(self, message):
         self.log(message, level=Logger.ERROR)
         
-    def logFatal(self, message):
+    def fatal(self, message):
         self.log(message, level=Logger.FATAL)
 
 
@@ -136,8 +140,13 @@ class DefaultScenario(Scenario):
         
         # player
         self.player = None
-#         self.initPlayer()
 
+    def reset(self):
+        self.scrollRowIdx = 0
+        self.scrollColIdx = 0
+        
+        self.player.reset()
+        
     def appendMap(self, m):
         if isinstance(m, Map):
             self.maps[m.getName()] = m
@@ -150,12 +159,6 @@ class DefaultScenario(Scenario):
     
     def getActiveMap(self):
         return self.map
-    
-#     def initPlayer(self):
-#         c = {
-#             'name': 'Hero'
-#         }
-#         self.player = Player(Config(**c))
 
     def getMapBorder(self):
         return self.map.getBorder()
@@ -183,7 +186,7 @@ class DefaultScenario(Scenario):
     
 #     def movePlayerToPos(self, row, col):
 #         self.player.moveToPos(row, col)
-#         self.scrollMap()
+#         self.updateScrollIndex()
     
     def movePlayer(self, drow, dcol):
         curRowIdx, curColIdx = self.getPlayerPos()
@@ -196,12 +199,12 @@ class DefaultScenario(Scenario):
         if tryRowIdx >= 0 and tryRowIdx < mapBorderRow and tryColIdx >= 0 and tryColIdx < mapBorderCol:
             if self.hasBlock(tryRowIdx, tryColIdx) == False:
                 self.player.move(drow, dcol)
-                self.scrollMap()
+                self.updateScrollIndex()
     
     def hasBlock(self, rowIdx, colIdx):
         return self.getActiveMap().hasBlock(rowIdx, colIdx)
     
-    def scrollMap(self):
+    def updateScrollIndex(self):
         curRowIdx, curColIdx = self.getPlayerPos()
         mapBorderRow, mapBorderCol = self.getMapBorder()
         
@@ -234,17 +237,14 @@ class DefaultScenario(Scenario):
                 self.movePlayer(-1, 0)
     
     def on_action(self):
+        # dummy action
         pass
     
-    def on_rendor(self, view):
-        if view != None:
-            view.render(self)
-    
-    def redrawAll(self, view):
+    def on_render(self, view):
         dx = self.MAP_PADDING_BLOCK * self.PADDING_PIXEL
         dy = self.MAP_PADDING_BLOCK * self.PADDING_PIXEL
         self.drawSlideWindow(view, dx, dy)
-        self.drawText(view, dx, dy)
+#         self.drawText(view, dx, dy)
         
     def drawSlideWindow(self, view, dx, dy):
         self.drawMap(view, dx, dy)
@@ -252,29 +252,26 @@ class DefaultScenario(Scenario):
 
     def drawMap(self, view, dx, dy):
         # slide window border
-        x0 = dx
-        y0 = dy
-        x1 = x0 + self.slideWindowCol * self.CELL_PIXEL
-        y1 = y0 + self.slideWindowRow * self.CELL_PIXEL
-        fill = 'white'
-#         view.create_rectangle(x0, y0, x1, y1, fill=fill)
+        x = dx
+        y = dy
+        w = self.slideWindowCol * self.CELL_PIXEL
+        h = self.slideWindowRow * self.CELL_PIXEL
+        view.rectangle(((x, y), (w, h)), color=View.COLOR_BLACK, border=1)
         
         # grid
         for i in range(1, self.slideWindowRow):
-            x0 = dx
-            y0 = dy + i * self.CELL_PIXEL
-            x1 = x0 + self.slideWindowCol * self.CELL_PIXEL
-            y1 = y0
-            fill = 'grey'
-#             view.create_line(x0, y0, x1, y1, fill=fill)
+            start_x = dx
+            start_y = dy + i * self.CELL_PIXEL
+            end_x = start_x + self.slideWindowCol * self.CELL_PIXEL
+            end_y = start_y
+            view.line((start_x, start_y), (end_x, end_y), color=View.COLOR_LIGHT_GREY, border=1)
             
         for j in range(1, self.slideWindowCol):
-            x0 = dx + j * self.CELL_PIXEL
-            y0 = dy
-            x1 = x0
-            y1 = y0 + self.slideWindowRow * self.CELL_PIXEL
-            fill = 'grey'
-#             view.create_line(x0, y0, x1, y1, fill=fill)
+            start_x = dx + j * self.CELL_PIXEL
+            start_y = dy
+            end_x = start_x
+            end_y = start_y + self.slideWindowRow * self.CELL_PIXEL
+            view.line((start_x, start_y), (end_x, end_y), color=View.COLOR_LIGHT_GREY, border=1)
         
         # block cells
         for i in range(self.slideWindowRow):
@@ -282,29 +279,28 @@ class DefaultScenario(Scenario):
                 sRowIdx = i + self.scrollRowIdx
                 sColIdx = j + self.scrollColIdx
                 if self.hasBlock(sRowIdx, sColIdx):
-                    x0 = dx + j * self.CELL_PIXEL
-                    y0 = dy + i * self.CELL_PIXEL
-                    x1 = x0 + self.CELL_PIXEL
-                    y1 = y0 + self.CELL_PIXEL
-#                     view.create_oval(x0, y0, x1, y1, fill='black')
-#                     view.create_text(x1 + 20, 
-#                                        (y0 + y1) / 2, 
-#                                        text='(%d, %d)' % (sRowIdx, sColIdx), 
-#                                        fill='black', 
-#                                        font='Arial 8')
+                    pad = 2
+                    x = dx + j * self.CELL_PIXEL + pad
+                    y = dy + i * self.CELL_PIXEL + pad
+                    w = self.CELL_PIXEL - 2 * pad
+                    h = w
+                    view.rectangle(((x, y), (w, h)), color=View.COLOR_BLACK, border=0)
+                    view.text((x + self.CELL_PIXEL, y + (self.CELL_PIXEL - view.fontsize) // 2),
+                              text='(%d, %d)' % (sRowIdx, sColIdx), 
+                              color=View.COLOR_BLACK)
 
-    def convertToSlideWindowPos(self, rowIdx, colIdx): # 51
+    def convertToSlideWindowPos(self, rowIdx, colIdx):
         sRowIdx = self.offsetRow - 1
-        sColIdx = self.offsetCol - 1 # 7
+        sColIdx = self.offsetCol - 1
 
-        mapBorderRow, mapBorderCol = self.getMapBorder() # 60
+        mapBorderRow, mapBorderCol = self.getMapBorder()
                 
         if rowIdx < self.offsetRow:
             sRowIdx = rowIdx
         elif rowIdx > mapBorderRow - (self.slideWindowRow - self.offsetRow) - 1:
             sRowIdx = rowIdx - (mapBorderRow - self.slideWindowRow)
         
-        if colIdx < self.offsetCol: # < 8
+        if colIdx < self.offsetCol:
             sColIdx = colIdx
         elif colIdx > mapBorderCol - (self.slideWindowCol - self.offsetCol) - 1:
             sColIdx = colIdx - (mapBorderCol - self.slideWindowCol)
@@ -315,34 +311,29 @@ class DefaultScenario(Scenario):
         (curRowIdx, curColIdx) = self.getPlayerPos()
         (slideRowIdx, slideColIdx) = self.convertToSlideWindowPos(curRowIdx, curColIdx)
         
-        x0 = dx + slideColIdx * self.CELL_PIXEL
-        y0 = dy + slideRowIdx * self.CELL_PIXEL
-        x1 = x0 + self.CELL_PIXEL
-        y1 = y0 + self.CELL_PIXEL
-#         view.create_oval(x0 + 1, 
-#                            y0 + 1, 
-#                            x1 - 1, 
-#                            y1 - 1, 
-#                            fill='grey')
+        pad = 3
+        x = dx + slideColIdx * self.CELL_PIXEL + pad
+        y = dy + slideRowIdx * self.CELL_PIXEL + pad
+        w = self.CELL_PIXEL - 2 * pad
+        h = w
+        view.rectangle(((x, y), (w, h)), color=View.COLOR_GREY, border=0)
+        
         # debug
-#         view.create_text(x1 + 20, 
-#                            (y0 + y1) / 2, 
-#                            text='(%d, %d)' % (slideRowIdx, slideColIdx), 
-#                            fill='black', 
-#                            font='Arial 8')
+        view.text((x + self.CELL_PIXEL, y + (self.CELL_PIXEL - view.fontsize) // 2),
+                  text='(%d, %d)' % (slideRowIdx, slideColIdx), 
+                  color=View.COLOR_GREY)
     
     def drawText(self, view, dx, dy):
         # map border
-#         view.create_text(dx + self.slideWindowCol * self.CELL_PIXEL // 2,
-#                            dy + self.slideWindowRow * self.CELL_PIXEL + self.PADDING_PIXEL // 2, 
-#                            text='slide (r%d x c%d)' % self.getSlideWindowBorder(), 
-#                            fill='black', 
-#                            font='Arial 8')
-#         view.create_text(dx + self.slideWindowCol * self.CELL_PIXEL // 2, 
-#                            dy + self.slideWindowRow * self.CELL_PIXEL + self.PADDING_PIXEL + self.PADDING_PIXEL // 2, 
-#                            text='map (r%d x c%d)' % self.getMapBorder(), 
-#                            fill='black', 
-#                            font='Arial 8')
+        view.text((dx + (self.CELL_PIXEL - view.fontsize) // 2, 
+                   dy + self.slideWindowRow * self.CELL_PIXEL + (self.CELL_PIXEL - view.fontsize) // 2),
+                  text="slide (r%d x c%d)" % self.getSlideWindowBorder(), 
+                  color=View.COLOR_BLACK)
+        
+        view.text((dx + (self.CELL_PIXEL - view.fontsize) // 2, 
+                   dy + self.slideWindowRow * self.CELL_PIXEL + (self.CELL_PIXEL - view.fontsize) // 2),
+                  text="map (r%d x c%d)" % self.getMapBorder(),
+                  color=View.COLOR_BLACK)
         
         # debug
         self.drawDebugText(view, dx, dy)
@@ -386,10 +377,8 @@ class DefaultScenario(Scenario):
 #                            font='Arial 8')
 
 # class BattleScenario(Scenario):
-#     def __init__(self, name, player, monster, **kwargs):
-#         super().__init__(name, **kwargs)
-#         self.player = player
-#         self.monster = monster
+#     def __init__(self, config):
+#         super().__init__(config)
     
 #     def battle(self, attacker, defencer):
 #         pass
@@ -468,6 +457,10 @@ class Creature(GameObject):
     
     def getPos(self):
         return self.rowIdx, self.colIdx
+    
+    def reset(self):
+        self.rowIdx = 0
+        self.colIdx = 0
 
 
 class Player(Creature):
@@ -484,11 +477,6 @@ class PygModal(GameObject):
     def __init__(self, config):
         super().__init__(config)
         pygame.init()
-#         self.FPS = config.fps
-#         self.width = config.width
-#         self.height = config.height
-#         self.clock = pygame.time.Clock()
-        
         self.running = False
         
         # all scenarios
@@ -499,9 +487,9 @@ class PygModal(GameObject):
     
     def methodWrapper(appMethod):
         def m(*args, **kwargs):
-            logger.logDebug('begin %s' % appMethod)
+            logger.debug('begin %s' % appMethod)
             ret = appMethod(*args, **kwargs)
-            logger.logDebug('end %s, ret %s' % (appMethod, ret))
+            logger.debug('end %s, ret %s' % (appMethod, ret))
             return ret
         
         return m
@@ -527,6 +515,23 @@ class PygModal(GameObject):
     def getView(self):
         return self.view
     
+    def getViewFPS(self):
+        return self.view.getFPS()
+    
+    def viewTick(self):
+        self.view.tick()
+    
+    def viewRender(self):
+        # overall
+        caption = "%s - FPS@%d" % (self.getName(), self.getViewFPS())
+        pygame.display.set_caption(caption)
+        
+        # active scenario render
+        self.getActiveScenario().on_render(self.getView())
+            
+        # view rendor
+        self.getView().render()
+    
     def run(self):
         self.running = True
         
@@ -535,45 +540,82 @@ class PygModal(GameObject):
             return
         
         while self.running:
-            milliseconds = self.clock.tick(self.FPS)
+            self.viewTick()
             
-            for e in pygame.event.get():
-                if e.type == pygame.QUIT:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     self.running = False
-                elif e.type == pygame.KEYDOWN:
-                    if e.key == pygame.K_ESCAPE:
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
                         self.running = False
                 
-                self.getActiveScenario().on_event(e)
+                self.getActiveScenario().on_event(event)
 
-            self.getActiveScenario().on_action()
+#             self.getActiveScenario().on_action()
             
-            self.getActiveScenario().on_render()
-        
+            self.viewRender()
+            
         pygame.quit()
 
 
 class View(GameObject):
-    def __init__(self, modal, config):
+    COLOR_BLACK = (0, 0, 0)
+    COLOR_WHITE = (255, 255, 255)
+    COLOR_LIGHT_GREY = (191, 191, 191)
+    COLOR_GREY = (127, 127, 127)
+    COLOR_DARK_GREY = (63, 63, 63)
+    
+    def __init__(self, config):
         super().__init__(config)
-        self.modal = modal
+        # screen setting
         self.width = config.width
         self.height = config.height
+        
+        # clock tick and fps
         self.fps = config.fps
         self.clock = pygame.time.Clock()
         
-        self.screen = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
-        self.background = pygame.Surface(self.screen.get_size()).convert()
+        # font
+        pygame.font.init()
+#         logger.debug("all available fonts\n%s" % pygame.font.get_fonts())
+        self.fontname = config.fontname
+        self.fontsize = config.fontsize
+        self.font = pygame.font.SysFont(self.fontname, self.fontsize, bold=False)
+        
+        # canvas
+        self.canvas = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
+        self.background = pygame.Surface(self.canvas.get_size()).convert()
+        self.background.fill(View.COLOR_WHITE)
+    
+    def getFPS(self):
+        return self.clock.get_fps()
     
     def tick(self):
         return self.clock.tick(self.fps)
     
-    def rendor(self, s):
-#         text = "FPS: %0.2f" % (self.clock.get_fps())
-#         pygame.display.set_caption(text)
-
+    def render(self):
         pygame.display.flip()
-        self.screen.blit(self.background, (0, 0))
+        self.canvas.blit(self.background, (0, 0))
+    
+    def rectangle(self, xywh, color, border=1):
+        pygame.draw.rect(self.canvas, color, xywh, border)
+
+    def line(self, start_xy, end_xy, color, border=1):
+        pygame.draw.line(self.canvas, color, start_xy, end_xy, border)
+    
+    def circle(self, xy, r, color, border=0):
+        pygame.draw.circle(self.canvas, color, xy, r, border)
+
+    def text(self, xy, text, color):
+        surface = self.font.render(text, True, color)
+        self.canvas.blit(surface, xy)
+
+#     def draw_text(self, text):
+
+#         fw, fh = self.font.size(text)
+#         surface = self.font.render(text, True, self.font_color)
+#         self.canvas.blit(surface, ((self.width - fw) // 2, (self.height - fh) // 2))
+
 
 # class EventType(object):
 #     QUIT = pygame.QUIT
@@ -606,9 +648,6 @@ class GameDelegator(object):
         self.modal.setActiveScenario(s.getName())
         self.modal.setView(v)
 
-#     def getInstance(self):
-#         return self
-    
     def run(self):
         self.modal.run()
 
