@@ -13,6 +13,7 @@ defaultViewConfig = {
     'height': 300,
     'fps': 50,
     
+    
 #     'fontname': 'arial',
     'fontname': 'calibri',
     'fontsize': 10
@@ -20,8 +21,8 @@ defaultViewConfig = {
 
 defaultScenarioConfig = {
     'name': 'default_scenario',
-    'width': 400,
-    'height': 300,
+#     'width': 400,
+#     'height': 300,
     
     'CELL_PIXEL': 20,
     'MAP_PADDING_BLOCK': 2,
@@ -138,11 +139,6 @@ class DefaultScenario(Scenario):
     def __init__(self, modal, config):
         super().__init__(modal, config)
         
-        # constant
-        self.CELL_PIXEL = config.CELL_PIXEL
-        self.MAP_PADDING_BLOCK = config.MAP_PADDING_BLOCK
-        self.PADDING_PIXEL = config.PADDING_PIXEL
-        
         # slide window frame setting
         self.slideWindowCol = config.slideWindowCol
         self.slideWindowRow = config.slideWindowRow
@@ -216,6 +212,10 @@ class DefaultScenario(Scenario):
     def getPlayerPosIndex(self):
         return self.getPlayer().setPosIndex()
     
+    ## items
+    def getItems(self):
+        return self.items
+    
     # reset functions
     def resetSlideIndex(self):
         self.scrollColIdx = 0
@@ -247,6 +247,9 @@ class DefaultScenario(Scenario):
             self.items[item.getName()] = item
         else:
             loggerError('Error in loading item %s' % items)
+            
+    def setItems(self, items):
+        self.items = items
     
     # logical action functions
     def movePlayer(self, dcol, drow):
@@ -311,7 +314,7 @@ class DefaultScenario(Scenario):
         self.getActiveMap().draw(view, **{'xywh': ((x, y), (w, h))})
 
     def drawItems(self, view, dx, dy):
-        pass
+#         pass
         # items in cells
         for i in range(self.slideWindowRow):
             for j in range(self.slideWindowCol):
@@ -722,13 +725,20 @@ class View(Generic):
 class DefaultView(View):
     def __init__(self, modal, config):
         super().__init__(modal, config)
+        
+        # constant
+        self.CELL_PIXEL = config.CELL_PIXEL
+        self.MAP_PADDING_BLOCK = config.MAP_PADDING_BLOCK
+        self.PADDING_PIXEL = config.PADDING_PIXEL
 
 class Magic(object):
     @staticmethod
-    def genItems(self, s, n):
+    def genItems(s, wh, n=10):
         items = []
+        (w, h) = wh
         for i in range(n):
             item = MountainItem(s, Config(**mountainItemConfig))
+            item.setPosIndex(random.randint(h), random.randint(w))
             items.append(item)
         
         return items
@@ -743,7 +753,7 @@ class GameDelegator(object):
         s.appendMap(m)
         s.setActiveMap(m.getName())
         
-        items = Magic.genItems(s)
+        items = Magic.genItems(s, self.modal.getMapBorder())
         s.setItems(items)
 
         p = Player(s, Config(**defaultPlayerConfig))
