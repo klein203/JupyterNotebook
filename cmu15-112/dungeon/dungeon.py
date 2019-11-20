@@ -21,12 +21,10 @@ defaultViewConfig = {
 
 defaultScenarioConfig = {
     'name': 'default_scenario',
-#     'width': 400,
-#     'height': 300,
-    
+
     'CELL_PIXEL': 20,
     'MAP_PADDING_BLOCK': 2,
-    'PADDING_PIXEL': 30,
+    'PADDING_BLOCK_PIXEL': 30,
     
     'slideWindowRow': 10,
     'slideWindowCol': 15
@@ -45,7 +43,13 @@ defaultPlayerConfig = {
 }
 
 mountainItemConfig = {
-    'name': 'mountain'
+    'name': 'mountain',
+    'blocked': True
+}
+
+waterItemConfig = {
+    'name': 'water',
+    'blocked': False
 }
 
 class Logger(object):
@@ -128,9 +132,6 @@ class Scenario(Generic):
     def on_rendor(self, view):
         raise NotImplementedError("function on_rendor() should be implemented")
     
-    def isDebugMode(self):
-        return self.getModal().isDebugMode()
-    
     def getModal(self):
         return self.modal
 
@@ -138,6 +139,10 @@ class Scenario(Generic):
 class DefaultScenario(Scenario):
     def __init__(self, modal, config):
         super().__init__(modal, config)
+        # constant
+        self.MAP_PADDING_BLOCK = config.MAP_PADDING_BLOCK
+        self.PADDING_BLOCK_PIXEL = config.PADDING_BLOCK_PIXEL
+        self.CELL_PIXEL = config.CELL_PIXEL
         
         # slide window frame setting
         self.slideWindowCol = config.slideWindowCol
@@ -180,10 +185,10 @@ class DefaultScenario(Scenario):
         pass
     
     def on_render(self, view):
-        dx = self.MAP_PADDING_BLOCK * self.PADDING_PIXEL
-        dy = self.MAP_PADDING_BLOCK * self.PADDING_PIXEL
+        dx = self.MAP_PADDING_BLOCK * self.PADDING_BLOCK_PIXEL
+        dy = self.MAP_PADDING_BLOCK * self.PADDING_BLOCK_PIXEL
         self.drawMap(view, dx, dy)
-        self.drawItems(view, dx, dy)
+#         self.drawItems(view, dx, dy)
         self.drawPlayer(view, dx, dy)
 #         self.drawText(view, dx, dy)
 
@@ -210,7 +215,7 @@ class DefaultScenario(Scenario):
         return self.player
 
     def getPlayerPosIndex(self):
-        return self.getPlayer().setPosIndex()
+        return self.getPlayer().getPosIndex()
     
     ## items
     def getItems(self):
@@ -266,10 +271,18 @@ class DefaultScenario(Scenario):
                 self.updateScrollIndex()
     
     def hasBlock(self, colIdx, rowIdx):
-        return self.getActiveMap().hasBlock(colIdx, rowIdx)
+        items = self.getActiveMap().getItems(colIdx, rowIdx)
+        if items == None:
+            return False
+
+        for item in items:
+            if item.isBlock():
+                return True
+        
+        return False
     
     def updateScrollIndex(self):
-        curColIdx, curRowIdx = self.getPlayerPos()
+        curColIdx, curRowIdx = self.getPlayerPosIndex()
         mapBorderCol, mapBorderRow = self.getMapBorder()
 
         if curColIdx < self.offsetCol:
@@ -306,15 +319,18 @@ class DefaultScenario(Scenario):
         return (sColIdx, sRowIdx)
         
     def drawMap(self, view, dx, dy):
+        cellPixel = self.getCellPixel()
+        
         # slide window frame
         x = dx
         y = dy
-        w = self.slideWindowCol * self.CELL_PIXEL
-        h = self.slideWindowRow * self.CELL_PIXEL
+        w = self.slideWindowCol * cellPixel
+        h = self.slideWindowRow * cellPixel
         self.getActiveMap().draw(view, **{'xywh': ((x, y), (w, h))})
 
     def drawItems(self, view, dx, dy):
-#         pass
+        cellPixel = self.getCellPixel()
+        
         # items in cells
         for i in range(self.slideWindowRow):
             for j in range(self.slideWindowCol):
@@ -322,9 +338,9 @@ class DefaultScenario(Scenario):
                 sRowIdx = i + self.scrollRowIdx
                 if self.hasBlock(sColIdx, sRowIdx):
                     pad = 2
-                    x = dx + j * self.CELL_PIXEL + pad
-                    y = dy + i * self.CELL_PIXEL + pad
-                    w = self.CELL_PIXEL - 2 * pad
+                    x = dx + j * cellPixel + pad
+                    y = dy + i * cellPixel + pad
+                    w = cellPixel - 2 * pad
                     h = w
                     # TODO
                     
@@ -332,24 +348,27 @@ class DefaultScenario(Scenario):
     
         
     def drawPlayer(self, view, dx, dy):
+        cellPixel = self.getCellPixel()
         (curColIdx, curRowIdx) = self.getPlayerPosIndex()
         (slideColIdx, slideRowIdx) = self.convertToSlideWindowPos(curColIdx, curRowIdx)
         pad = 3
-        x = dx + slideColIdx * self.CELL_PIXEL + pad
-        y = dy + slideRowIdx * self.CELL_PIXEL + pad
-        w = self.CELL_PIXEL - 2 * pad
+        x = dx + slideColIdx * cellPixel + pad
+        y = dy + slideRowIdx * cellPixel + pad
+        w = cellPixel - 2 * pad
         h = w
         self.getPlayer().draw(view, **{'xywh': ((x, y), (w, h))})
     
     def drawText(self, view, dx, dy):
+        cellPixel = self.getCellPixel()
+        
         # map border
-        view.text((dx + (self.CELL_PIXEL - view.fontsize) // 2, 
-                   dy + self.slideWindowRow * self.CELL_PIXEL + (self.CELL_PIXEL - view.fontsize) // 2),
+        view.text((dx + (cellPixel - view.fontsize) // 2, 
+                   dy + self.slideWindowRow * cellPixel + (cellPixel - view.fontsize) // 2),
                   text="slide (r%d x c%d)" % self.getSlideWindowBorder(), 
                   color=View.COLOR_BLACK)
         
-        view.text((dx + (self.CELL_PIXEL - view.fontsize) // 2, 
-                   dy + self.slideWindowRow * self.CELL_PIXEL + (self.CELL_PIXEL - view.fontsize) // 2),
+        view.text((dx + (cellPixel - view.fontsize) // 2, 
+                   dy + self.slideWindowRow * cellPixel + (cellPixel - view.fontsize) // 2),
                   text="map (r%d x c%d)" % self.getMapBorder(),
                   color=View.COLOR_BLACK)
         
@@ -367,9 +386,6 @@ class Map(Generic):
         super().__init__(config)
         self.scenario = scenario
     
-    def isDebugMode(self):
-        return self.scenario.isDebugMode()
-    
     def getScenario(self):
         return self.scenario
 
@@ -383,47 +399,78 @@ class DefaultMap(Map):
         
         self.col = config.col
         self.row = config.row
-        self.board = [([None] * self.col) for i in range(self.row)]
-
-#         if config.randomMode:
-#             self.randomMap(config.p)
+        self.board = [[None for j in range(self.col)] for i in range(self.row)]
+        
+        self.randomMode = config.randomMode
+        self.p = config.p
+        
+        if self.randomMode:
+            self.randomMap(self.p)
         
     def getBorder(self):
         return self.col, self.row
     
-    def getObjects(self, colIdx, rowIdx):
+    def getItems(self, colIdx, rowIdx):
         return self.board[rowIdx][colIdx]
     
-#     def randomMap(self, p=0.999):
-#         for i in range(self.row):
-#             for j in range(self.col):
-#                 if random.random() > p:
-#                     item = MountainItem(Config(**mountainItemConfig))
-#                     item.setPosIndex(j, i)
-#                     self.board[i][j] = item
+    def appendItem(self, item, colIdx, rowIdx):
+        if self.board[rowIdx][colIdx] == None:
+            self.board[rowIdx][colIdx] = list()
+        self.board[rowIdx][colIdx].append(item)
+        
+    def randomMap(self, p=0.999):
+        items_class = [MountainItem, WaterItem]
+        items_config = [mountainItemConfig, waterItemConfig]
+        for i in range(self.row):
+            for j in range(self.col):
+                if random.random() > p:
+                    idx = random.randint(0, len(items_class) - 1)
+                    clazz = items_class[idx]
+                    item = clazz(Config(**items_config[idx]))
+                    item.setPosIndex(j, i)
+                    self.appendItem(item, j, i)   
+
+    def randomMountainMap(self, p=0.999):
+        for i in range(self.row):
+            for j in range(self.col):
+                if random.random() > p:
+                    item = MountainItem(Config(**mountainItemConfig))
+                    item.setPosIndex(j, i)
+                    self.appendItem(item, j, i)
     
     def draw(self, view, **kwargs):
         ((x, y), (w, h)) = kwargs['xywh']
         view.rectangle(((x, y), (w, h)), color=View.COLOR_BLACK, border=1)
         
         (slideWindowCol, slideWindowRow) = self.getScenario().getSlideWindowBorder()
+        (scrollColIdx, scrollRowIdx) = self.getScenario().getScrollIndex()
         cellPixel = self.getScenario().getCellPixel()
         
         # grid
-        if self.isDebugMode():
-            for j in range(1, slideWindowCol):
-                start_x = dx + j * cellPixel
-                start_y = dy
-                end_x = start_x
-                end_y = start_y + slideWindowRow * cellPixel
-                view.line((start_x, start_y), (end_x, end_y), color=View.COLOR_LIGHT_GREY, border=1)
+#         for j in range(1, slideWindowCol):
+#             start_x = dx + j * cellPixel
+#             start_y = dy
+#             end_x = start_x
+#             end_y = start_y + slideWindowRow * cellPixel
+#             view.line((start_x, start_y), (end_x, end_y), color=View.COLOR_LIGHT_GREY, border=1)
 
-            for i in range(1, slideWindowRow):
-                start_x = dx
-                start_y = dy + i * cellPixel
-                end_x = start_x + slideWindowCol * cellPixel
-                end_y = start_y
-                view.line((start_x, start_y), (end_x, end_y), color=View.COLOR_LIGHT_GREY, border=1)
+#         for i in range(1, slideWindowRow):
+#             start_x = dx
+#             start_y = dy + i * cellPixel
+#             end_x = start_x + slideWindowCol * cellPixel
+#             end_y = start_y
+#             view.line((start_x, start_y), (end_x, end_y), color=View.COLOR_LIGHT_GREY, border=1)
+        
+        # items on map layer
+        for i in range(slideWindowRow):
+            for j in range(slideWindowCol):
+                items = self.board[scrollRowIdx + i][scrollColIdx + j]
+                if items != None:
+                    for item in items:
+                        c_x = x + j * cellPixel
+                        c_y = y + i * cellPixel
+                        item.draw(view, **{'xywh': ((c_x, c_y), (cellPixel, cellPixel))})
+                    
 
 class GameObject(Generic):
     def __init__(self, config):
@@ -436,15 +483,13 @@ class GameObject(Generic):
     def draw(self, view, **kwargs):
         raise NotImplementedError("function draw() should be implemented")
     
-    def isDebugMode(self):
-        raise NotImplementedError("function isDebugMode() should be implemented")
-    
     def setPosIndex(self, colIdx, rowIdx):
         self.colIdx = colIdx
         self.rowIdx = rowIdx
     
     def getPosIndex(self):
         return self.colIdx, self.rowIdx
+
         
 class Creature(GameObject):
     def __init__(self, scenario, config):
@@ -470,7 +515,6 @@ class Creature(GameObject):
 #         self.hit = 0
 #         self.avoid = 0
         
-        
         # dice
         self.maxDice = 20
     
@@ -485,7 +529,6 @@ class Creature(GameObject):
 #         self.rowIdx = rowIdx
 #         self.colIdx = colIdx
     
-    
     def reset(self):
         self.colIdx = 0
         self.rowIdx = 0
@@ -493,9 +536,6 @@ class Creature(GameObject):
     def draw(self, view, **kwargs):
         super().draw(view, **kwargs)
     
-    def isDebugMode(self):
-        return self.getScenario().isDebugMode()
-
     def getScenario(self):
         return self.scenario
 
@@ -507,58 +547,78 @@ class Player(Creature):
     
     def draw(self, view, **kwargs):
         ((x, y), (w, h)) = kwargs['xywh']
-        view.rectangle(((x, y), (w, h)), color=View.COLOR_GREY, border=0)
+        padding = 2
+        # draw body
+        points = ((x + padding, y + h - padding), (x + w - padding, y + h - padding), (x + w // 2, y + padding))
+        view.polygon(points, color=View.COLOR_GREY, border=0)
+        # draw head
+        view.circle((x + w // 2, y + h // 3), h * 5 // 12, color=View.COLOR_GREY, border=0)
         
         # debug
-        if self.isDebugMode():
-            offset = self.getScenario().getCellPixel()
-            view.text((x + offset, y),
-                      text='(%d, %d)' % (self.colIdx, self.rowIdx), 
-                      color=View.COLOR_GREY)
+#         offset = self.getScenario().getCellPixel()
+#         view.text((x + offset, y),
+#                   text='(%d, %d)' % (self.colIdx, self.rowIdx), 
+#                   color=View.COLOR_GREY)
 
 
 class Monster(Creature):
-    def __init__(self, scenario, config):
-        super().__init__(scenario, config)
-    
-    def draw(self, view, **kwargs):
-        pass
-
-
-class Item(GameObject):
-    def __init__(self, scenario, config):
-        super().__init__(config)
-        self.scenario = scenario
-    
-    def isDebugMode(self):
-        return self.scenario.isDebugMode()
-    
-    def getScenario(self):
-        return self.scenario
-
     def draw(self, view, **kwargs):
         super().draw(view, **kwargs)
-        
 
-class MountainItem(Item):
-    def __init__(self, scenario, config):
-        super().__init__(scenario, config)
-    
+
+class SlimeMonster(Monster):
     def draw(self, view, **kwargs):
         ((x, y), (w, h)) = kwargs['xywh']
         padding = 2
-        points = ((x + padding, y + h), (x + w - padding, y + h), (x + w // 2 - padding, y + padding))
-        view.polygon(points, color=View.COLOR_BLACK, border=0)
-#         view.rectangle(((x, y), (w, h)), color=View.COLOR_BLACK, border=0)
+#         view.circle((x + w // 2, y + h // 2), w // 2 - padding, color=View.COLOR_DARK_GREY, border=0)
+#         view.line((x + w // 2, y + padding), (x + w // 2, y + h - padding), color=View.COLOR_DARK_GREY, border=1)
+#         view.line((x + padding, y + h // 2), (x + w - padding, y + h // 2), color=View.COLOR_DARK_GREY, border=1)
+        view.text((x + w // 2, y + h // 2), text="slime", color=View.COLOR_BLUE):
+        
 
-
-class BlockItem(Item):
-    def __init__(self, scenario, config):
-        super().__init__(scenario, config)
-    
+class ShinyMonster(Monster):
     def draw(self, view, **kwargs):
         ((x, y), (w, h)) = kwargs['xywh']
-        view.rectangle(((x, y), (w, h)), color=View.COLOR_BLACK, border=0)
+        padding = 2
+        view.circle((x + w // 2, y + h // 2), w // 2 - padding, color=View.COLOR_DARK_GREY, border=0)
+        view.line((x + w // 2, y + padding), (x + w // 2, y + h - padding), color=View.COLOR_DARK_GREY, border=1)
+        view.line((x + padding, y + h // 2), (x + w - padding, y + h // 2), color=View.COLOR_DARK_GREY, border=1)
+        
+
+class Item(GameObject):
+    def __init__(self, config):
+        super().__init__(config)
+        self.blocked = config.blocked
+    
+    def draw(self, view, **kwargs):
+        super().draw(view, **kwargs)
+    
+    def isBlock(self):
+        return self.blocked
+        
+
+class MountainItem(Item):
+    def draw(self, view, **kwargs):
+        ((x, y), (w, h)) = kwargs['xywh']
+        padding = 2
+        points = ((x + padding, y + h - padding), (x + w - padding, y + h - padding), (x + w // 2, y + padding))
+        view.polygon(points, color=View.COLOR_BLACK, border=0)
+
+        
+class WaterItem(Item):
+    def draw(self, view, **kwargs):
+        ((x, y), (w, h)) = kwargs['xywh']
+        padding = 2
+        view.line((x + padding, y + h // 4), (x + w - padding, y + h // 4), color=View.COLOR_BLUE, border=1)
+        view.line((x + padding, y + h // 2), (x + w - padding, y + h // 2), color=View.COLOR_BLUE, border=1)
+        view.line((x + padding, y + h * 3 // 4), (x + w - padding, y + h * 3 // 4), color=View.COLOR_BLUE, border=1)
+
+        
+class BlockItem(Item):
+    def draw(self, view, **kwargs):
+        ((x, y), (w, h)) = kwargs['xywh']
+        padding = 2
+        view.rectangle(((x + padding, y + padding), (w - 2 * padding, h - 2 * padding)), color=View.COLOR_BLACK, border=0)
 
 
 class PygModal(Generic):
@@ -573,8 +633,6 @@ class PygModal(Generic):
         
         self.view = None
         
-        self.debugMode = False
-    
     def methodWrapper(appMethod):
         def m(*args, **kwargs):
             logger.debug('begin %s' % appMethod)
@@ -583,15 +641,6 @@ class PygModal(Generic):
             return ret
         
         return m
-    
-    def setDebugMode(self, mode=True):
-        self.debugMode = mode
-    
-    def toggleDebugMode(self):
-        self.debugMode = not self.debugMode
-    
-    def isDebugMode(self):
-        return self.debugMode
     
     def appendScenario(self, s):
         if isinstance(s, Scenario):
@@ -622,7 +671,7 @@ class PygModal(Generic):
     
     def viewRender(self):
         # overall
-        caption = "%s%s - FPS@%d" % (self.getName(), '[DEBUG]' if self.isDebugMode() else '', self.getViewFPS())
+        caption = "%s - FPS@%d" % (self.getName(), self.getViewFPS())
         pygame.display.set_caption(caption)
         
         # active scenario render
@@ -647,8 +696,6 @@ class PygModal(Generic):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
-                    elif event.key == pygame.K_d:
-                        self.toggleDebugMode()
                 
                 self.getActiveScenario().on_event(event)
 
@@ -665,6 +712,9 @@ class View(Generic):
     COLOR_LIGHT_GREY = (191, 191, 191)
     COLOR_GREY = (127, 127, 127)
     COLOR_DARK_GREY = (63, 63, 63)
+    COLOR_RED = (255, 0, 0)
+    COLOR_GREEN = (0, 255, 0)
+    COLOR_BLUE = (0, 0, 255)
     
     def __init__(self, modal, config):
         super().__init__(config)
@@ -723,47 +773,54 @@ class View(Generic):
         
 
 class DefaultView(View):
-    def __init__(self, modal, config):
-        super().__init__(modal, config)
-        
-        # constant
-        self.CELL_PIXEL = config.CELL_PIXEL
-        self.MAP_PADDING_BLOCK = config.MAP_PADDING_BLOCK
-        self.PADDING_PIXEL = config.PADDING_PIXEL
+    pass
+
 
 class Magic(object):
     @staticmethod
-    def genItems(s, wh, n=10):
+    def genMountainItems(border, n=10):
         items = []
-        (w, h) = wh
+        (colIdx, rowIdx) = border
         for i in range(n):
-            item = MountainItem(s, Config(**mountainItemConfig))
-            item.setPosIndex(random.randint(h), random.randint(w))
+            item = MountainItem(Config(**mountainItemConfig))
+            item.setPosIndex(random.randint(0, colIdx - 1), random.randint(0, rowIdx - 1))
             items.append(item)
         
         return items
-        
+
+
 class GameDelegator(object):
     def __init__(self):
-        self.modal = PygModal(Config(**defaultGlobalConfig))
+        # init modal
+        modal = PygModal(Config(**defaultGlobalConfig))
         
-        s = DefaultScenario(self.modal, Config(**defaultScenarioConfig))
+        # init scenario
+        scen = DefaultScenario(modal, Config(**defaultScenarioConfig))
         
-        m = DefaultMap(s, Config(**defaultMapConfig))
-        s.appendMap(m)
-        s.setActiveMap(m.getName())
+        # append scenario
+        modal.appendScenario(scen)
+        modal.setActiveScenario(scen.getName())
         
-        items = Magic.genItems(s, self.modal.getMapBorder())
-        s.setItems(items)
-
-        p = Player(s, Config(**defaultPlayerConfig))
-        s.setPlayer(p)
+        # init map
+        mp = DefaultMap(scen, Config(**defaultMapConfig))
+        scen.appendMap(mp)
+        scen.setActiveMap(mp.getName())
         
-        self.modal.appendScenario(s)
-        self.modal.setActiveScenario(s.getName())
+        # bind items to map
+#         items = Magic.genMountainItems(mp.getBorder(), n=3)
+#         for item in items:
+#             colIdx, rowIdx = item.getPosIndex()
+#             mp.appendItem(item, colIdx, rowIdx)
         
-        v = DefaultView(self.modal, Config(**defaultViewConfig))
-        self.modal.setView(v)
+        # append player
+        ply = Player(scen, Config(**defaultPlayerConfig))
+        scen.setPlayer(ply)
+        
+        # bind view
+        vw = DefaultView(modal, Config(**defaultViewConfig))
+        modal.setView(vw)
+        
+        self.modal = modal
 
     def run(self):
         self.modal.run()
