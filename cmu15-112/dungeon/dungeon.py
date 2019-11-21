@@ -1,6 +1,5 @@
 import random, uuid
 import pygame
-from abc import ABC, abstractmethod
 
 
 defaultGlobalConfig = {
@@ -12,7 +11,6 @@ defaultViewConfig = {
     'width': 400,
     'height': 300,
     'fps': 50,
-    
     
 #     'fontname': 'arial',
     'fontname': 'calibri',
@@ -38,8 +36,19 @@ defaultMapConfig = {
     'p': 0.98
 }
 
+# player
 defaultPlayerConfig = {
     'name': 'Hero'
+}
+
+warriorPlayerConfig = {
+    'name': 'Warrior'
+}
+
+# items
+defaultItemConfig = {
+    'name': 'Item',
+    'blocked': False
 }
 
 mountainItemConfig = {
@@ -51,6 +60,7 @@ waterItemConfig = {
     'name': 'water',
     'blocked': False
 }
+
 
 class Logger(object):
     DEBUG = 0
@@ -573,7 +583,7 @@ class SlimeMonster(Monster):
 #         view.circle((x + w // 2, y + h // 2), w // 2 - padding, color=View.COLOR_DARK_GREY, border=0)
 #         view.line((x + w // 2, y + padding), (x + w // 2, y + h - padding), color=View.COLOR_DARK_GREY, border=1)
 #         view.line((x + padding, y + h // 2), (x + w - padding, y + h // 2), color=View.COLOR_DARK_GREY, border=1)
-        view.text((x + w // 2, y + h // 2), text="slime", color=View.COLOR_BLUE):
+        view.text((x + w // 2, y + h // 2), text="slime", color=View.COLOR_BLUE)
         
 
 class ShinyMonster(Monster):
@@ -767,8 +777,13 @@ class View(Generic):
 #         )
         pygame.draw.polygon(self.canvas, color, points, border)
     
-    def text(self, xy, text, color):
-        surface = self.font.render(text, True, color)
+    def text(self, xy, text, color, fontsize=None):
+        if fontsize == None:
+            surface = self.font.render(text, True, color)
+        else:
+            font = pygame.font.SysFont(self.fontname, fontsize, bold=False)
+            surface = font.render(text, True, color)
+        
         self.canvas.blit(surface, xy)
         
 
