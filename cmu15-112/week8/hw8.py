@@ -150,7 +150,7 @@ def testAll():
     testFriendsOfFriends()
 
 def main():
-    cs112_f19_week8_linter.lint()
+#     cs112_f19_week8_lsinter.lint()
     testAll()
 
 if __name__ == '__main__':

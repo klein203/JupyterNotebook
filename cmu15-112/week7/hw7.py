@@ -446,7 +446,7 @@ def drawGamePause(app, canvas):
 #################################################
 
 def main():
-    cs112_f19_week7_linter.lint()
+#     cs112_f19_week7_linter.lint()
     playTetris()
 
 if __name__ == '__main__':

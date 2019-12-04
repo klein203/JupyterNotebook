@@ -291,7 +291,7 @@ def testAll():
     testBonusRunSimpleProgram()
 
 def main():
-    cs112_f19_week4_linter.lint()
+#     cs112_f19_week4_linter.lint()
     testAll()
 
 if __name__ == '__main__':

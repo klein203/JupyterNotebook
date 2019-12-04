@@ -228,7 +228,7 @@ def testAll():
     # testBonusFindIntRootsOfCubic()
 
 def main():
-    cs112_f19_week1_linter.lint()
+#     cs112_f19_week1_linter.lint()
     testAll()
 
 if __name__ == '__main__':

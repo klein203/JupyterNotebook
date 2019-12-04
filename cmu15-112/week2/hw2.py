@@ -416,7 +416,7 @@ def testAll():
     #testBonusPlay112()
 
 def main():
-    cs112_f19_week2_linter.lint()
+#     cs112_f19_week2_linter.lint()
     testAll()
 
 if __name__ == '__main__':

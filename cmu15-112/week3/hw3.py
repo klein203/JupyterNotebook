@@ -590,7 +590,7 @@ def testAll():
     testBonusGetEvalSteps()
 
 def main():
-    cs112_f19_week3_linter.lint()
+#     cs112_f19_week3_linter.lint()
     testAll()
 
 if __name__ == '__main__':
