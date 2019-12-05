@@ -81,14 +81,27 @@ def binarySearchValues(L, item):
     return binarySearchValuesHelper(L, 0, len(L) - 1, item)
 
 def secondLargest(L):
-    def secondLargestHelper(L):
+    def secondLargestHelper(L, pair):
         if L == [ ]:
-            return 
+            if pair[0] > pair[1]:
+                return (pair[0], pair[1])
+            else:
+                return (pair[1], pair[0])
+        else:
+            first, second = pair[0], pair[1]
+            if L[0] > pair[0]:
+                first, second = L[0], pair[0]
+            elif L[0] > pair[1]:
+                first, second = pair[0], L[0]
+            else:
+                pass
+                
+            return secondLargestHelper(L[1:], (first, second))
 
-    if len(L) <= 2:
+    if len(L) < 2:
         return None
     else:
-        return secondLargestHelper(L)
+        return secondLargestHelper(L[2:], (L[0], L[1]))[1]
 
 #################################################
 # Test Functions
