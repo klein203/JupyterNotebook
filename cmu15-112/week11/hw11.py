@@ -42,28 +42,70 @@ def confirmPolicies():
     # and both of you are contributing and learning the material well.
     # Have fun!!!!! 
     return  {
-    'I can work solo on hw11': 42,
-    'I can work with one partner on hw11': 42,
+    'I can work solo on hw11': True,
+    'I can work with one partner on hw11': True,
     ("I must list my hw11 partner's name and andrewId at the top" +
-     "of my hw11.py file that I submit"): 42,
-    'I can switch hw11 partners and then work with a new partner': 42,
-    'My hw11 partner must be in 112 this semester': 42,
-    'My hw11 partner must be in the same lecture or section as me': 42,
-    "I can look at my hw11 partner's code": 42,
-    "I can copy some of hw11 partner's code": 42,
-    "I can help my hw11 partner debug their code": 42,
-    "I can electronically transfer some of my code to my hw11 partner": 42,
+     "of my hw11.py file that I submit"): True,
+    'I can switch hw11 partners and then work with a new partner': False,
+    'My hw11 partner must be in 112 this semester': True,
+    'My hw11 partner must be in the same lecture or section as me': False,
+    "I can look at my hw11 partner's code": True,
+    "I can copy some of hw11 partner's code": False,
+    "I can help my hw11 partner debug their code": True,
+    "I can electronically transfer some of my code to my hw11 partner": False,
     ("I can tell my hw11 partner line-by-line, character-by-character " +
-     "what to type so their code is nearly-identical to mine."): 42,
+     "what to type so their code is nearly-identical to mine."): False,
     }
 
 def findLargestFile(path):
-    return 42
+    def findLargestFileWrapper(method):
+        import functools
+        top = {"path": "",
+               "size": 0}
+        @functools.wraps(method)
+        def m(*args, **kwargs):
+            ret = method(*args)
+            
+            if ret != None and ret > top["size"]:
+                top["path"] = args[0]
+                top["size"] = ret
+            
+            return top["path"]
+        
+        return m
+    
+    @findLargestFileWrapper
+    def traversePath(path):
+        if os.path.isfile(path):
+            return os.path.getsize(path)
+        else:
+            for filename in os.listdir(path):
+                traversePath(path + '/' + filename)
+            return None
+    
+    return traversePath(path)
 
 def evalPrefixNotation(L):
-    return 42
+    def evalPrefixNotationHelper(L):
+        if L == [ ]:
+            return None
+        else:
+            operator = L.pop(0)
+            if str(operator).isdigit():
+                return operator
+            elif operator in ['+', '-', '*']:
+                s = "(%s%s%s)" % (evalPrefixNotationHelper(L), operator, evalPrefixNotationHelper(L))
+                return eval(s)
+            else:
+                raise Exception('Unknown operator: ' + operator)
+    
+    return evalPrefixNotationHelper(L)
 
 def solveABC(constraints, aPosition):
+    from backtracking import BacktrackingPuzzleSolver, State
+    
+#     class 
+    
     return 42
 
 def flatten(L):
@@ -200,7 +242,7 @@ def testAll():
     testFlatten() # bonus
 
 def main():
-    cs112_f19_week11_linter.lint()
+#     cs112_f19_week11_linter.lint()
     testAll()
 
 if (__name__ == '__main__'):

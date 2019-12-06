@@ -80,6 +80,7 @@ def binarySearchValues(L, item):
 
     return binarySearchValuesHelper(L, 0, len(L) - 1, item)
 
+# version 1
 def secondLargest(L):
     def secondLargestHelper(L, pair):
         if L == [ ]:
@@ -103,6 +104,49 @@ def secondLargest(L):
     else:
         return secondLargestHelper(L[2:], (L[0], L[1]))[1]
 
+# version 2
+def secondLargest(L):
+    def secondLargestWrapper(method):
+        import functools
+        
+        cache = {"first": None,
+                 "second": None}
+        
+        @functools.wraps(method)
+        def m(*args, **kwargs):
+            ret = method(*args)
+            if ret != None:
+                if cache["first"] == None:
+                    cache["first"] = ret
+                elif cache["second"] == None:
+                    if ret > cache["first"]:
+                        cache["second"] = cache["first"]
+                        cache["first"] = ret
+                    else:
+                        cache["second"] = ret
+                else:
+                    if ret > cache["first"]:
+                        cache["second"] = cache["first"]
+                        cache["first"] = ret
+                    elif ret > cache["second"]:
+                        cache["second"] = ret
+                    else:
+                        pass
+            
+            return cache["second"]
+
+        return m
+
+    @secondLargestWrapper
+    def traverseList(L):
+        if L == [ ]:
+            return None
+        else:
+            traverseList(L[1:])
+            return L[0]
+
+    return traverseList(L)
+    
 #################################################
 # Test Functions
 #################################################
