@@ -104,13 +104,119 @@ def evalPrefixNotation(L):
 def solveABC(constraints, aPosition):
     from backtracking import BacktrackingPuzzleSolver, State
     
-#     class 
+    class ABCPuzzleSolver(BacktrackingPuzzleSolver):
+        def __init__(self, sCharacter, sPosition, constraints):
+            self.n = 5
+            self.startArgs = (sCharacter, sPosition, constraints) # for printReport
+            self.startState = ABCState([sCharacter], [sPosition])
+            self.constraints = self.initConstraints(constraints)
+
+        def initConstraints(self, constraints):
+            con = dict()
+            if len(constraints) != 24:
+                raise Exception('Constraints should be a 24 characters length string')
+
+            for i in range(0, 24):
+                ch = constraints[i]
+                if i in [0, 12]:
+                    con[ch] = self._initConstraints('DIAG_BACKSLASH')
+                elif i in [6, 18]:
+                    con[ch] = self._initConstraints('DIAG_SLASH')
+                elif i < 6:
+                    con[ch] = self._initConstraints('COL', col=i-1)
+                elif i < 12:
+                    con[ch] = self._initConstraints('ROW', row=i-7)
+                elif i < 18:
+                    con[ch] = self._initConstraints('COL', col=17-i)
+                else: # i < 24
+                    con[ch] = self._initConstraints('ROW', row=23-i)
+
+            return con
+
+        def _initConstraints(self, constraintType, row=None, col=None):
+            if constraintType == 'ROW':
+                return set([(row, i) for i in range(0, self.n)])
+            elif constraintType == 'COL':
+                return set([(i, col) for i in range(0, self.n)])
+            elif constraintType == 'DIAG_BACKSLASH':
+                return set([(i, i) for i in range(0, self.n)])
+            elif constraintType == 'DIAG_SLASH':
+                return set([(i, self.n - 1 - i) for i in range(0, self.n)])
+            else:
+                raise Exception('Undefined constraints type')
+
+        def constraintMap(self, ch):
+            return self.constraints[ch]
+
+        def isSolutionState(self, state):
+            if len(state.positions) < self.n ** 2:
+                return False
+
+            # check 'Y'
+            character = state.characters[-1]
+            position = state.positions[-1]
+            return (position in self.constraintMap(character)) and (position not in state.positions[:-1])
+
+        def getLegalMoves(self, state):
+            # try to move to the adjacent cells (rows, cols or diagonals
+            position = state.positions[-1]
+            return self.adjacentCells(position)
+
+        def adjacentCells(self, position):
+            (row, col) = position
+            delta = [-1, 0, +1]
+            rows = [row + d for d in delta if row + d >= 0 and row + d < self.n]
+            cols = [col + d for d in delta if col + d >= 0 and col + d < self.n]
+            return [(r, c) for r in rows for c in cols if not (r == row and c == col)]
+
+        def doMove(self, state, move):
+            curCharacter = state.characters[-1]
+            nextCharacter = chr(ord(curCharacter) + 1)
+
+            newCharacters = state.characters + [nextCharacter]
+            newPositions = state.positions + [move]
+            return ABCState(newCharacters, newPositions)
+
+        def stateSatisfiesConstraints(self, state):
+            character = state.characters[-1]
+            position = state.positions[-1]
+            return (position in self.constraintMap(character)) and (position not in state.positions[:-1])
+
+    class ABCState(State):
+        def __init__(self, characters, positions):
+            self.n = 5
+            self.characters = characters
+            self.positions = positions
+
+        def __repr__(self):
+            return '\n'.join([' '.join(row) for row in self.as2DList()])
+        
+        def as2DList(self):
+            board = [ (['-'] * self.n) for row in range(self.n) ]
+            for i in range(0, len(self.positions)):
+                row, col = self.positions[i]
+                board[row][col] = self.characters[i]
+            return board
     
-    return 42
+    (_, state) = ABCPuzzleSolver('A', aPosition, constraints).solve(checkConstraints=True, printReport=False)
+    if state == None:
+        return None
+    else:
+        return state.as2DList()
 
 def flatten(L):
-    # This is bonus!
-    return 42
+    def flattenHelper(L):
+        if type(L) == list:
+            if L == [ ]:
+                return [ ]
+            if type(L[0]) == list:
+                return flattenHelper(L[0] + []) + flattenHelper(L[1:] + [])
+            else:
+                return [L[0]] + flattenHelper(L[1:] + [])
+        else:
+            return L
+    
+    return flattenHelper(L)
 
 ################################################
 # ignore_rest:  place all your graphics and tests below here!
