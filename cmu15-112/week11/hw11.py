@@ -227,9 +227,59 @@ from tkinter import *
 
 class FreddyFractalViewer(App):
     def redrawAll(self, canvas):
-        canvas.create_text(self.width/2, self.height/2,
-                           text='<insert FreddyFractalViewer here>',
-                           font='Arial 20 bold')
+        self.drawTeddyFaces(canvas, self.width/2, self.height * 2 // 3)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(autorun=False, *args, **kwargs)
+        self.feddyFaces = self.initFeddyFaces(xc=0, yc=0, r=96, w=8, depth=6)
+        self.run()
+    
+    def initFeddyFaces(self, xc=0, yc=0, r=96, w=8, depth=6):
+        def initFeddyFaceHelper(xc, yc, r, w, depth):
+            if depth == 0:
+                return [ ]
+            else:
+                # current + left + right
+                l_xc, l_yc = xc - r, yc - r
+                r_xc, r_yc = xc + r, yc - r
+                new_r = max(r // 2, 1)
+                new_w = max(w // 2, 1)
+                new_depth = depth - 1
+                return [(xc, yc, r, w)] + initFeddyFaceHelper(l_xc, l_yc, new_r, new_w, new_depth) + initFeddyFaceHelper(r_xc, r_yc, new_r, new_w, new_depth)
+                
+        return initFeddyFaceHelper(xc, yc, r, w, depth)
+    
+    def teddyFace(self, canvas, xc, yc, r, w):
+        def drawOutline(canvas, xc, yc, r, w):
+            canvas.create_oval(xc - r, yc - r, xc + r, yc + r, fill="brown", width=max(w, 1))
+            
+        def drawEye(canvas, xc, yc, r):
+            canvas.create_oval(xc - r, yc - r, xc + r, yc + r, fill="black")
+
+        def drawNosePart(canvas, xc, yc, r, w):
+            canvas.create_oval(xc - r, yc - r, xc + r, yc + r, fill="tan", width=max(w, 1))
+        
+        def drawNose(canvas, xc, yc, r):
+            canvas.create_oval(xc - r, yc - r, xc + r, yc + r, fill="black")
+        
+        def drawHalfMouth(canvas, xc, yc, r, w):
+            canvas.create_arc(xc - r, yc - r, xc + r, yc + r, extent=-180, style=ARC, width=max(w, 1))
+        
+        # outline
+        drawOutline(canvas, xc, yc, r, w)
+        # eyes
+        drawEye(canvas, xc - r * 5 // 12, yc - r // 3, r // 6)
+        drawEye(canvas, xc + r * 5 // 12, yc - r // 3, r // 6)
+        # nose parts
+        drawNosePart(canvas, xc, yc + r // 3, r // 2, w - 1)
+        drawNose(canvas, xc, yc + r // 8, r // 6)
+        # mouth parts
+        drawHalfMouth(canvas, xc - r // 8, yc + r // 2, r // 8, w - 2)
+        drawHalfMouth(canvas, xc + r // 8, yc + r // 2, r // 8, w - 2)
+    
+    def drawTeddyFaces(self, canvas, dx, dy):
+        for (xc, yc, r, w) in self.feddyFaces:
+            self.teddyFace(canvas, dx + xc, dy + yc, r, w)
 
 def runFreddyFractalViewer():
     FreddyFractalViewer(width=400, height=400)
