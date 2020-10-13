@@ -1,9 +1,7 @@
 # Customized
 test.ipynb
-uci/heart/temp
-Machine_Learning_Explainability/2_Permutation_Importance/temp
-sym/temp
 .vscode
+temp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
