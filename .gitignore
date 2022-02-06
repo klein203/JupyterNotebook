@@ -2,8 +2,8 @@
 test.ipynb
 .vscode
 temp
-course/pytorch/mnist_data
-course/pytorch/weights
+data
+pth
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
